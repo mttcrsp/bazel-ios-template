@@ -1,5 +1,5 @@
-load("@rules_apple//apple:ios.bzl", "ios_application")
-load("@rules_swift//swift:swift.bzl", "swift_library")
+load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
 
 swift_library(
@@ -7,6 +7,7 @@ swift_library(
   srcs = ["App.swift"],
   tags = ["manual"],
   deps = [
+    "//Vendor/Alamofire:Alamofire",
     "//Vendor/PINOperation:PINOperation",
   ]
 )
