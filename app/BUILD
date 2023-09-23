@@ -3,9 +3,12 @@ load("@rules_swift//swift:swift.bzl", "swift_library")
 load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
 
 swift_library(
-    name = "app_lib",
-    srcs = ["App.swift"],
-    tags = ["manual"],
+  name = "app_lib",
+  srcs = ["App.swift"],
+  tags = ["manual"],
+  deps = [
+    "//Vendor/PINOperation:PINOperation",
+  ]
 )
 
 ios_application(
