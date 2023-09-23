@@ -119,7 +119,6 @@ objc_library(
       "Source/**/*.m"
     ]
   ),
-  module_map = ":PINOperation_module_map",
   hdrs = [
     ":PINOperation_cxx_hdrs"
   ],
@@ -128,11 +127,9 @@ objc_library(
     "Foundation"
   ],
   deps = [
-    ":PINOperation_cxx_includes",
-    ":PINOperation_module_map"
+    ":PINOperation_cxx_includes"
   ],
   copts = [
-    "-I$(GENDIR)/Vendor/PINOperation/",
     "-std=c++14",
     "-Wno-everything",
     "-Wnon-modular-include-in-framework-module",
@@ -240,7 +237,6 @@ objc_library(
       "Source/**/*.m"
     ]
   ),
-  module_map = ":PINOperation_module_map",
   hdrs = [
     ":PINOperation_hdrs"
   ],
@@ -250,11 +246,9 @@ objc_library(
   ],
   deps = [
     ":PINOperation_cxx",
-    ":PINOperation_includes",
-    ":PINOperation_module_map"
+    ":PINOperation_includes"
   ],
   copts = [
-    "-I$(GENDIR)/Vendor/PINOperation/",
     "-fobjc-weak",
     "-Wno-everything",
     "-Wnon-modular-include-in-framework-module",
@@ -294,14 +288,4 @@ acknowledged_target(
   name = "PINOperation_acknowledgement",
   deps = [],
   value = "//Vendor/PINOperation/pod_support_buildable:acknowledgement_fragment"
-)
-gen_module_map(
-  name = "PINOperation_module_map",
-  module_name = "PINOperation",
-  hdrs = [
-    "PINOperation_public_hdrs"
-  ],
-  visibility = [
-    "//visibility:public"
-  ]
 )
