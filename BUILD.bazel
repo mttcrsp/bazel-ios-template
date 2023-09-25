@@ -3,11 +3,11 @@ load("@cgrindel_bazel_starlib//bzltidy:defs.bzl", "tidy")
 load("@rules_swift_package_manager//swiftpkg:defs.bzl", "swift_update_packages")
 
 tidy(
-    name = "tidy",
-    targets = [
-        ":swift_update_pkgs",
-        ":update_build_files",
-    ],
+  name = "tidy",
+  targets = [
+    ":swift_update_pkgs",
+    ":update_build_files",
+  ],
 )
 
 # MARK: - Gazelle
@@ -16,16 +16,16 @@ tidy(
 # gazelle:exclude .build
 
 gazelle_binary(
-    name = "gazelle_bin",
-    languages = [
-        "@bazel_skylib_gazelle_plugin//bzl",
-        "@rules_swift_package_manager//gazelle",
-    ],
+  name = "gazelle_bin",
+  languages = [
+    "@bazel_skylib_gazelle_plugin//bzl",
+    "@rules_swift_package_manager//gazelle",
+  ],
 )
 
 swift_update_packages(
-    name = "swift_update_pkgs",
-    gazelle = ":gazelle_bin",
-    generate_swift_deps_for_workspace = False,
-    update_bzlmod_stanzas = True,
+  name = "swift_update_pkgs",
+  gazelle = ":gazelle_bin",
+  generate_swift_deps_for_workspace = False,
+  update_bzlmod_stanzas = True,
 )
