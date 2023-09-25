@@ -8,7 +8,11 @@ swift_library(
     srcs = ["App.swift"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
-    deps = ["@swiftpkg_swift_composable_architecture//:Sources_ComposableArchitecture"],
+    deps = [
+        "@swiftpkg_swift_composable_architecture//:Sources_ComposableArchitecture",
+        "//Vendor/IGListKit:IGListKit",
+        "//Vendor/Texture:Texture",
+    ],
 )
 
 ios_application(
@@ -26,7 +30,7 @@ ios_application(
 )
 
 xcodeproj(
-    name = "xcodeproj",
+    name = "proj",
     project_name = "App",
     tags = ["manual"],
     top_level_targets = [":app"],

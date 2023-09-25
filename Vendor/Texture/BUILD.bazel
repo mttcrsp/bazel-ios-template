@@ -1,0 +1,1360 @@
+
+load(
+  "//Vendor/rules_pods/BazelExtensions:extensions.bzl",
+  "acknowledged_target",
+  "gen_module_map",
+  "gen_includes",
+  "headermap",
+  "umbrella_header"
+)
+# Add a config setting release for compilation mode
+# Assume that people are using `opt` for release mode
+# see the bazel user manual for more information
+# https://docs.bazel.build/versions/master/be/general.html#config_setting
+config_setting(
+  name = "release",
+  values = {
+    "compilation_mode": "opt"
+  }
+)
+config_setting(
+  name = "osxCase",
+  values = {
+    "apple_platform_type": "macos"
+  }
+)
+config_setting(
+  name = "tvosCase",
+  values = {
+    "apple_platform_type": "tvos"
+  }
+)
+config_setting(
+  name = "watchosCase",
+  values = {
+    "apple_platform_type": "watchos"
+  }
+)
+filegroup(
+  name = "Texture_package_hdrs",
+  srcs = [
+    "Texture_direct_hdrs",
+    "Core_direct_hdrs",
+    "PINRemoteImage_direct_hdrs",
+    "IGListKit_direct_hdrs",
+    "Yoga_direct_hdrs",
+    "TextNode2_direct_hdrs",
+    "Video_direct_hdrs",
+    "MapKit_direct_hdrs",
+    "Photos_direct_hdrs",
+    "AssetsLibrary_direct_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Texture_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Texture_public_hdrs",
+  srcs = [
+    ":AssetsLibrary_public_hdrs",
+    ":Core_public_hdrs",
+    ":MapKit_public_hdrs",
+    ":PINRemoteImage_public_hdrs",
+    ":Photos_public_hdrs",
+    ":Video_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Texture_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ) + [
+    ":AssetsLibrary_hdrs",
+    ":Core_hdrs",
+    ":MapKit_hdrs",
+    ":PINRemoteImage_hdrs",
+    ":Photos_hdrs",
+    ":Video_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "Texture_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":Texture_hdrs"
+  ],
+  deps = [
+    ":AssetsLibrary_hmap",
+    ":Core_hmap",
+    ":MapKit_hmap",
+    ":PINRemoteImage_hmap",
+    ":Photos_hmap",
+    ":Video_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "Texture_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "Texture",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":Texture_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":AssetsLibrary",
+    ":Core",
+    ":MapKit",
+    ":PINRemoteImage",
+    ":Photos",
+    ":Video",
+    ":Texture_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-std=c++14",
+    "-std=c++11",
+    "-stdlib=libc++",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "Texture_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+gen_module_map(
+  name = "AsyncDisplayKit_module_map",
+  module_name = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Core_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*",
+      "Source/**/*.h",
+      "Source/*.h",
+      "Source/Base/*.h",
+      "Source/Debug/**/*.h",
+      "Source/Details/**/*.h",
+      "Source/Layout/**/*.h",
+      "Source/TextExperiment/Component/*.h",
+      "Source/TextExperiment/String/ASTextAttribute.h",
+      "Source/TextKit/*.h",
+      "Source/TextKit/ASTextKitComponents.h",
+      "Source/TextKit/ASTextNodeTypes.h"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Core_public_hdrs",
+  srcs = glob(
+    [
+      "Source/*.h",
+      "Source/Base/*.h",
+      "Source/Debug/**/*.h",
+      "Source/Details/**/*.h",
+      "Source/Layout/**/*.h",
+      "Source/TextExperiment/Component/*.h",
+      "Source/TextExperiment/String/ASTextAttribute.h",
+      "Source/TextKit/ASTextKitComponents.h",
+      "Source/TextKit/ASTextNodeTypes.h"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Core_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*",
+      "Source/**/*.h",
+      "Source/*.h",
+      "Source/Base/*.h",
+      "Source/Debug/**/*.h",
+      "Source/Details/**/*.h",
+      "Source/Layout/**/*.h",
+      "Source/TextExperiment/Component/*.h",
+      "Source/TextExperiment/String/ASTextAttribute.h",
+      "Source/TextKit/*.h",
+      "Source/TextKit/ASTextKitComponents.h",
+      "Source/TextKit/ASTextNodeTypes.h"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Core_union_hdrs",
+  srcs = [
+    "Core_hdrs",
+    "Texture_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "Core_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":Core_union_hdrs"
+  ],
+  deps = [
+    "//Vendor/IGListKit:IGListKit"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "Core_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "Core",
+  enable_modules = 1,
+  srcs = glob(
+    [
+      "Source/**/*.mm"
+    ]
+  ),
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":Core_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    "//Vendor/IGListKit:IGListKit",
+    ":Core_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-std=c++14",
+    "-std=c++11",
+    "-stdlib=libc++",
+    "-fno-exceptions",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "Core_acknowledgement",
+  deps = [
+    "//Vendor/IGListKit:IGListKit_acknowledgement"
+  ],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "PINRemoteImage_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "PINRemoteImage_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "PINRemoteImage_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "PINRemoteImage_union_hdrs",
+  srcs = [
+    "PINRemoteImage_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "PINRemoteImage_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":PINRemoteImage_union_hdrs"
+  ],
+  deps = [
+    "//Vendor/PINRemoteImage:PINCache",
+    "//Vendor/PINRemoteImage:iOS",
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "PINRemoteImage_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "PINRemoteImage",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":PINRemoteImage_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    "//Vendor/PINRemoteImage:PINCache",
+    "//Vendor/PINRemoteImage:iOS",
+    ":Core",
+    ":PINRemoteImage_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "PINRemoteImage_acknowledgement",
+  deps = [
+    "//Vendor/PINRemoteImage:PINCache_acknowledgement",
+    "//Vendor/PINRemoteImage:iOS_acknowledgement"
+  ],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "IGListKit_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "IGListKit_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "IGListKit_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "IGListKit_union_hdrs",
+  srcs = [
+    "IGListKit_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "IGListKit_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":IGListKit_union_hdrs"
+  ],
+  deps = [
+    "//Vendor/IGListDiffKit:IGListDiffKit",
+    "//Vendor/IGListKit:IGListKit",
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "IGListKit_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "IGListKit",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":IGListKit_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    "//Vendor/IGListDiffKit:IGListDiffKit",
+    "//Vendor/IGListKit:IGListKit",
+    ":Core",
+    ":IGListKit_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "IGListKit_acknowledgement",
+  deps = [
+    "//Vendor/IGListDiffKit:IGListDiffKit_acknowledgement",
+    "//Vendor/IGListKit:IGListKit_acknowledgement"
+  ],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "Yoga_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Yoga_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Yoga_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Yoga_union_hdrs",
+  srcs = [
+    "Yoga_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "Yoga_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":Yoga_union_hdrs"
+  ],
+  deps = [
+    "//Vendor/Yoga:Yoga",
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "Yoga_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "Yoga",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":Yoga_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    "//Vendor/Yoga:Yoga",
+    ":Core",
+    ":Yoga_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-DYOGA=1",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "Yoga_acknowledgement",
+  deps = [
+    "//Vendor/Yoga:Yoga_acknowledgement"
+  ],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "TextNode2_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "TextNode2_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "TextNode2_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "TextNode2_union_hdrs",
+  srcs = [
+    "TextNode2_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "TextNode2_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":TextNode2_union_hdrs"
+  ],
+  deps = [
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "TextNode2_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "TextNode2",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":TextNode2_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":Core",
+    ":TextNode2_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-DAS_ENABLE_TEXTNODE=0",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "TextNode2_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "Video_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Video_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Video_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Video_union_hdrs",
+  srcs = [
+    "Video_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "Video_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":Video_union_hdrs"
+  ],
+  deps = [
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "Video_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "Video",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":Video_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_frameworks = [
+    "AVFoundation",
+    "CoreMedia"
+  ],
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":Core",
+    ":Video_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-DAS_USE_VIDEO=1",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "Video_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "MapKit_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "MapKit_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "MapKit_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "MapKit_union_hdrs",
+  srcs = [
+    "MapKit_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "MapKit_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":MapKit_union_hdrs"
+  ],
+  deps = [
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "MapKit_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "MapKit",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":MapKit_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_frameworks = [
+    "CoreLocation",
+    "MapKit"
+  ],
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":Core",
+    ":MapKit_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-DAS_USE_MAPKIT=1",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "MapKit_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "Photos_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Photos_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Photos_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "Photos_union_hdrs",
+  srcs = [
+    "Photos_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "Photos_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":Photos_union_hdrs"
+  ],
+  deps = [
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "Photos_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "Photos",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":Photos_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_frameworks = [
+    "Photos"
+  ],
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":Core",
+    ":Photos_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-DAS_USE_PHOTOS=1",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "Photos_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
+filegroup(
+  name = "AssetsLibrary_direct_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "AssetsLibrary_public_hdrs",
+  srcs = [
+    ":Core_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "AssetsLibrary_hdrs",
+  srcs = glob(
+    [
+      "pod_support/Headers/Public/**/*"
+    ]
+  ),
+  visibility = [
+    "//visibility:public"
+  ]
+)
+filegroup(
+  name = "AssetsLibrary_union_hdrs",
+  srcs = [
+    "AssetsLibrary_hdrs",
+    "Texture_hdrs",
+    ":Core_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+headermap(
+  name = "AssetsLibrary_hmap",
+  namespace = "AsyncDisplayKit",
+  hdrs = [
+    "Texture_package_hdrs",
+    ":AssetsLibrary_union_hdrs"
+  ],
+  deps = [
+    ":Core_hmap"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+gen_includes(
+  name = "AssetsLibrary_includes",
+  include = [
+    "Vendor/Texture/pod_support/Headers/Public/"
+  ]
+)
+objc_library(
+  name = "AssetsLibrary",
+  enable_modules = 1,
+  module_map = ":AsyncDisplayKit_module_map",
+  hdrs = [
+    ":AssetsLibrary_hdrs"
+  ],
+  pch = "pod_support/Headers/Private/Texture-prefix.pch",
+  sdk_frameworks = select(
+    {
+      "//conditions:default": [
+        "AssetsLibrary"
+      ]
+    }
+  ),
+  sdk_dylibs = [
+    "c++"
+  ],
+  deps = [
+    ":Core",
+    ":AssetsLibrary_includes",
+    ":AsyncDisplayKit_module_map"
+  ],
+  copts = [
+    "-I$(GENDIR)/Vendor/Texture/",
+    "-fobjc-weak",
+    "-Wno-everything",
+    "-Wnon-modular-include-in-framework-module",
+    "-g",
+    "-stdlib=libc++",
+    "-DCOCOAPODS=1",
+    "-DOBJC_OLD_DISPATCH_PROTOTYPES=0",
+    "-fdiagnostics-show-note-include-stack",
+    "-fno-common",
+    "-fembed-bitcode-marker",
+    "-fmessage-length=0",
+    "-fpascal-strings",
+    "-fstrict-aliasing",
+    "-Wno-error=nonportable-include-path"
+  ] + select(
+    {
+      "//conditions:default": [
+        "-DDEBUG=1",
+        "-DPOD_CONFIGURATION_DEBUG=1"
+      ],
+      ":release": [
+        "-DPOD_CONFIGURATION_RELEASE=1",
+        "-DNS_BLOCK_ASSERTIONS=1"
+      ]
+    }
+  ) + [
+    "-IVendor/Texture/pod_support/Headers/Public/AsyncDisplayKit/"
+  ] + [
+    "-fmodule-name=AsyncDisplayKit",
+    "-fmodules"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
+)
+acknowledged_target(
+  name = "AssetsLibrary_acknowledgement",
+  deps = [],
+  value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
+)
