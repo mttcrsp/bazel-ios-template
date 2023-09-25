@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -85,6 +85,9 @@
 
 - (void)listAdapter:(IGListAdapter *)listAdapter sectionControllerWillEnterWorkingRange:(IGListSectionController *)sectionController {
     __unused UICollectionViewCell *cell = [self.collectionContext cellForItemAtIndex:0 sectionController:self];
+    __unused UIView *supplementaryView = [self.collectionContext viewForSupplementaryElementOfKind:UICollectionElementKindSectionHeader
+                                                                                           atIndex:0
+                                                                                 sectionController:self];
 }
 
 - (void)listAdapter:(IGListAdapter *)listAdapter sectionControllerDidExitWorkingRange:(IGListSectionController *)sectionController {}

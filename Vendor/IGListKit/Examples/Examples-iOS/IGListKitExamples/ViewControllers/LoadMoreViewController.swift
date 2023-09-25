@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,13 +15,20 @@ final class LoadMoreViewController: UIViewController, ListAdapterDataSource, UIS
     }()
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
 
-    lazy var items = Array(0...20)
+    lazy var items: [Int] = {
+        // Load more on iPad in order for the content size to be bigger than its screen.
+        UIDevice.current.userInterfaceIdiom == .pad ? Array(0...30) : Array(0...15)
+    }()
+
     var loading = false
     let spinToken = "spinner"
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        collectionView.alwaysBounceVertical = true
         view.addSubview(collectionView)
+
         adapter.collectionView = collectionView
         adapter.dataSource = self
         adapter.scrollViewDelegate = self
@@ -30,6 +37,7 @@ final class LoadMoreViewController: UIViewController, ListAdapterDataSource, UIS
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         collectionView.frame = view.bounds
+        collectionView.collectionViewLayout.invalidateLayout()
     }
 
     // MARK: ListAdapterDataSource

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import <IGListDiffKit/IGListDiff.h>
+#import "IGListDiff.h"
 
 /**
  Bitmask-able options used for pre-release feature testing.
@@ -16,12 +16,14 @@ NS_SWIFT_NAME(ListExperiment)
 typedef NS_OPTIONS (NSInteger, IGListExperiment) {
     /// Specifies no experiments.
     IGListExperimentNone = 1 << 1,
-    /// Test updater diffing performed on a background queue.
-    IGListExperimentBackgroundDiffing = 1 << 2,
     /// Test invalidating layout when cell reloads/updates in IGListBindingSectionController.
-    IGListExperimentInvalidateLayoutForUpdates = 1 << 3,
-    /// Test array and set optimization on update
-    IGListExperimentArrayAndSetOptimization = 1 << 4,
+    IGListExperimentInvalidateLayoutForUpdates = 1 << 2,
+    /// Test skipping performBatchUpdate if we don't have any updates.
+    IGListExperimentSkipPerformUpdateIfPossible = 1 << 3,
+    /// Test skipping creating {view : section controller} map, which has inconsistency issue.
+    IGListExperimentSkipViewSectionControllerMap = 1 << 4,
+    /// Use the correct section index when calling -[IGListAdapter reloadObjects ...] within the update block.
+    IGListExperimentFixCrashOnReloadObjects = 1 << 5
 };
 
 /**

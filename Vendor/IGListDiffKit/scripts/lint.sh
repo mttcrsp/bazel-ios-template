@@ -1,21 +1,28 @@
 #!/bin/bash
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-VERSION="0.24.2"
+# Adds support for Apple Silicon brew directory
+if test -d "/opt/homebrew/bin/"; then
+  PATH="/opt/homebrew/bin/:${PATH}"
+  export PATH
+fi
+
+VERSION="0.50.3"
 FOUND=$(swiftlint version)
 
 if which swiftlint >/dev/null; then
     swiftlint lint --config ../.swiftlint.yml
 else
     echo "
-    Error: SwiftLint not installed!
+    Warning: SwiftLint not installed!
+    You should download SwiftLint to verify your Swift code.
     Download from https://github.com/realm/SwiftLint,
     or brew install swiftlint.
     "
-    exit 1
+    exit
 fi
 
 if [ $(swiftlint version) != $VERSION ]; then

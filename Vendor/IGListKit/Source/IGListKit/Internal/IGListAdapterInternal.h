@@ -1,13 +1,13 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <IGListKit/IGListAdapter.h>
-#import <IGListKit/IGListBatchContext.h>
-#import <IGListKit/IGListCollectionContext.h>
+#import "IGListAdapter.h"
+#import "IGListBatchContext.h"
+#import "IGListCollectionContext.h"
 
 #import "IGListAdapter+UICollectionView.h"
 #import "IGListAdapterProxy.h"
@@ -30,6 +30,8 @@ IGListBatchContext
 {
     __weak UICollectionView *_collectionView;
     BOOL _isDequeuingCell;
+    BOOL _isDequeuingSupplementaryView;
+
     BOOL _isSendingWorkingRangeDisplayUpdates;
 }
 
@@ -57,8 +59,11 @@ IGListBatchContext
 
  Note that the previous section controller map is destroyed as soon as a transition is finished so there is no dangling
  objects or section controllers.
+ 
+ During this period, we're updating IGListKit's internal data, but not the UICollectionView just yet. This is a dangerous time, since the internal
+ data might only be partially updated.
  */
-@property (nonatomic, assign) BOOL isInUpdateBlock;
+@property (nonatomic, assign, readonly) BOOL isInDataUpdateBlock;
 @property (nonatomic, strong, nullable) IGListSectionMap *previousSectionMap;
 
 /**

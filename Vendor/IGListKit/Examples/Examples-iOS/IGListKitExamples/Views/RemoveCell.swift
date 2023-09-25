@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol RemoveCellDelegate: class {
+protocol RemoveCellDelegate: AnyObject {
     func removeCellDidTapButton(_ cell: RemoveCell)
 }
 
@@ -43,7 +43,7 @@ final class RemoveCell: UICollectionViewCell {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = UIColor.background
         let bounds = contentView.bounds
         let divide = bounds.divided(atDistance: 100, from: .maxXEdge)
         label.frame = divide.slice.insetBy(dx: 15, dy: 0)

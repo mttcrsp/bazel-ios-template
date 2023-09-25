@@ -277,7 +277,8 @@ headermap(
     ":Core_union_hdrs"
   ],
   deps = [
-    "//Vendor/IGListKit:IGListKit"
+    "//Vendor/IGListKit:IGListKit",
+    "//Vendor/PINRemoteImage:PINRemoteImage"
   ],
   visibility = [
     "//visibility:public"
@@ -307,6 +308,7 @@ objc_library(
   ],
   deps = [
     "//Vendor/IGListKit:IGListKit",
+    "//Vendor/PINRemoteImage:PINRemoteImage",
     ":Core_includes",
     ":AsyncDisplayKit_module_map"
   ],
@@ -353,7 +355,8 @@ objc_library(
 acknowledged_target(
   name = "Core_acknowledgement",
   deps = [
-    "//Vendor/IGListKit:IGListKit_acknowledgement"
+    "//Vendor/IGListKit:IGListKit_acknowledgement",
+    "//Vendor/PINRemoteImage:PINRemoteImage_acknowledgement"
   ],
   value = "//Vendor/Texture/pod_support_buildable:acknowledgement_fragment"
 )
@@ -498,7 +501,8 @@ filegroup(
 filegroup(
   name = "IGListKit_public_hdrs",
   srcs = [
-    ":Core_public_hdrs"
+    ":Core_public_hdrs",
+    ":PINRemoteImage_public_hdrs"
   ],
   visibility = [
     "//visibility:public"
@@ -520,7 +524,8 @@ filegroup(
   srcs = [
     "IGListKit_hdrs",
     "Texture_hdrs",
-    ":Core_hdrs"
+    ":Core_hdrs",
+    ":PINRemoteImage_hdrs"
   ],
   visibility = [
     "//visibility:public"
@@ -536,7 +541,8 @@ headermap(
   deps = [
     "//Vendor/IGListDiffKit:IGListDiffKit",
     "//Vendor/IGListKit:IGListKit",
-    ":Core_hmap"
+    ":Core_hmap",
+    ":PINRemoteImage_hmap"
   ],
   visibility = [
     "//visibility:public"
@@ -563,6 +569,7 @@ objc_library(
     "//Vendor/IGListDiffKit:IGListDiffKit",
     "//Vendor/IGListKit:IGListKit",
     ":Core",
+    ":PINRemoteImage",
     ":IGListKit_includes",
     ":AsyncDisplayKit_module_map"
   ],

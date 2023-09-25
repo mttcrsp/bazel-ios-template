@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
 import IGListKit
 import UIKit
 
-protocol StoryboardLabelSectionControllerDelegate: class {
+protocol StoryboardLabelSectionControllerDelegate: AnyObject {
     func removeSectionControllerWantsRemoved(_ sectionController: StoryboardLabelSectionController)
 }
 
@@ -22,11 +22,10 @@ final class StoryboardLabelSectionController: ListSectionController {
     }
 
     override func cellForItem(at index: Int) -> UICollectionViewCell {
-        guard let cell = collectionContext?.dequeueReusableCellFromStoryboard(withIdentifier: "cell",
-                                                                              for: self,
-                                                                              at: index) as? StoryboardCell else {
-                                                                                fatalError()
-        }
+        let cell: StoryboardCell = collectionContext.dequeueReusableCellFromStoryboard(
+            withIdentifier: "cell",
+            for: self,
+            at: index)
         cell.text = object?.name
         return cell
     }

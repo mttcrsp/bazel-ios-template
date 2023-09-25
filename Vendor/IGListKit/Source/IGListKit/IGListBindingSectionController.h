@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,15 @@
 
 #import <Foundation/Foundation.h>
 
+#if !__has_include(<IGListDiffKit/IGListDiffKit.h>)
+#import "IGListMacros.h"
+#else
 #import <IGListDiffKit/IGListMacros.h>
-#import <IGListKit/IGListBindingSectionControllerDataSource.h>
-#import <IGListKit/IGListBindingSectionControllerSelectionDelegate.h>
-#import <IGListKit/IGListSectionController.h>
+#endif
+
+#import "IGListBindingSectionControllerDataSource.h"
+#import "IGListBindingSectionControllerSelectionDelegate.h"
+#import "IGListSectionController.h"
 
 @protocol IGListDiffable;
 

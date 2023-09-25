@@ -8,31 +8,109 @@ The changelog for `IGListKit`. Also see the [releases](https://github.com/instag
 
 ### Breaking Changes
 
-- Removed unneeded diffing functions `IGListDiffExperiment(...)` and `IGListDiffPathsExperiment(...)`. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Changed iOS deployment target to 11.0 and macOS deployment target to 10.13 [Kent Sutherland](https://github.com/ksuther) [#1573](https://github.com/Instagram/IGListKit/pull/1573)
+
+- Removed unneeded diffing functions `IGListDiffExperiment(...)` and `IGListDiffPathsExperiment(...)`. [Maxime Ollivier](https://github.com/maxolls) [(254c041)](https://github.com/Instagram/IGListKit/commit/254c04196a6b906a155d8a1dd670c720500bed6c)
+
+- `ListSectionController.collectionContext` and `ListGenericSectionController.object` are now implicitly-unwrapped optionals in Swift. [Nate Stedman](https://github.com/natestedman) [(a6526ce)](https://github.com/Instagram/IGListKit/commit/a6526ce097fe38de85459cd6a34d948ec8440db7)
+
+- The argument of `IGListGenericSectionController`'s `-didUpdateToObject:` is now generic, not `id`. [Nate Stedman](https://github.com/natestedman) [(a6526ce)](https://github.com/Instagram/IGListKit/commit/a6526ce097fe38de85459cd6a34d948ec8440db7)
+
+- Updated  `IGListUpdatingDelegate`, including a new method to safely perform `[IGListAdapter setDataSource:]` and changes to `-performUpdateWithCollectionViewBlock` that allows section-controllers to be created before the diffing (and therefore use a more accurate `toObjects` array) [Maxime Ollivier](https://github.com/maxolls) [(43af883)](https://github.com/Instagram/IGListKit/commit/43af8838dfdcfc50b8145c56cfecb5f5ed9195a5)
+
+```objc
+// OLD
+- (void)performUpdateWithCollectionViewBlock:(IGListCollectionViewBlock)collectionViewBlock
+                                 fromObjects:(nullable NSArray<id <IGListDiffable>> *)fromObjects
+                              toObjectsBlock:(nullable IGListToObjectBlock)toObjectsBlock
+                                    animated:(BOOL)animated
+                       objectTransitionBlock:(IGListObjectTransitionBlock)objectTransitionBlock
+                                  completion:(nullable IGListUpdatingCompletion)completion;
+
+// NEW
+- (void)performUpdateWithCollectionViewBlock:(IGListCollectionViewBlock)collectionViewBlock
+                                    animated:(BOOL)animated
+                            sectionDataBlock:(IGListTransitionDataBlock)sectionDataBlock
+                       applySectionDataBlock:(IGListTransitionDataApplyBlock)applySectionDataBlock
+                                  completion:(nullable IGListUpdatingCompletion)completion;
+
+// NEW
+- (void)performDataSourceChange:(IGListDataSourceChangeBlock)block;
+```
+
+- Removed `allowsBackgroundReloading` from `IGListAdapterUpdater` because it's causing performance issues and other bugs. [Maxime Ollivier](https://github.com/maxolls) [(032e1b0)](https://github.com/Instagram/IGListKit/commit/032e1b0b8367e68ef3015f0dc7dfe2f3ff2bae0c)
+
+- Introducing `allowsBackgroundDiffing` on `IGListAdapterUpdater`! This property lets the updater perform the diffing on a background thread. Originally introduced by Ryan Nystrom a while back. [Maxime Ollivier](https://github.com/maxolls) [(9a11f6)](https://github.com/Instagram/IGListKit/commit/9a11f6b55f02a8a89494035fb17203655e454404)
+
+- Updated `scrollToObject:` method in `IGListAdapter` to include a new parameter `additionalOffset` to handle shifting the final scroll position by some vertical or horizontal offset depending on the scroll direction. This allows the object to be shown at the correct position when it is scrolled to in a list with sticky headers. [Anna Tang](https://www.instagram.com/anna.likesfood/) [(f2166c3)](https://github.com/Instagram/IGListKit/commit/f2166c358b3ed0fb3e9dd55d2bed9b7fe7a6a05e)
+
+```objc
+// OLD
+- (void)scrollToObject:(id)object
+    supplementaryKinds:(nullable NSArray<NSString *> *)supplementaryKinds
+       scrollDirection:(UICollectionViewScrollDirection)scrollDirection
+        scrollPosition:(UICollectionViewScrollPosition)scrollPosition
+              animated:(BOOL)animated;
+
+// NEW
+- (void)scrollToObject:(id)object
+    supplementaryKinds:(nullable NSArray<NSString *> *)supplementaryKinds
+       scrollDirection:(UICollectionViewScrollDirection)scrollDirection
+        scrollPosition:(UICollectionViewScrollPosition)scrollPosition
+      additionalOffset:(CGPoint)additionalOffset
+              animated:(BOOL)animated;
+```
 
 ### Enhancements
+- Added `viewForSupplementaryElementOfKind:atIndex:sectionController:` to `IGListAdapter`. [ryanmathews](https://www.instagram.com/_rmathews_/) [(c708a10)](https://github.com/Instagram/IGListKit/commit/c708a10757944f147110a31be661d015e9fc901c)
+
+- Added `shouldDeselectItemAtIndex:` to `IGListSectionController`. [bladeofky](https://github.com/bladeofky) [(b22a10e)](https://github.com/Instagram/IGListKit/commit/b22a10e47ffa87c79993ea19db7b52605e83ebbf)
+
+- Added `shouldSelectItemAtIndex:` to `IGListSectionController`. [dirtmelon](https://github.com/dirtmelon) [(#1479)](https://github.com/Instagram/IGListKit/pull/1479)
+
+- Added [Mac Catalyst](https://developer.apple.com/mac-catalyst/) support. [Petro Rovenskyy](https://github.com/3a4oT/) [(#1487)](https://github.com/Instagram/IGListKit/pull/1487)
 
 - Introduce `IGListSwiftKit`, with Swift refinements for `dequeueReusableCellOfClass` methods. [Koen Punt](https://github.com/koenpunt) [(#1388)](https://github.com/Instagram/IGListKit/pull/1388).
 
 - Added `APPLICATION_EXTENSION_API_ONLY` support for `IGListDiffKit` [Peter Meyers](https://github.com/pm-dev) [(#1422)](https://github.com/Instagram/IGListKit/pull/1422)
 
--  Improved performance by deferring requesting objects from the `IGListAdapterDataSource` until just before diffing is executed. If n updates are coalesced into one, this results in just a single request for objects from the data source. Shipped with experiment `IGListExperimentDeferredToObjectCreation` from Ryan Nystrom.  [Maxime Ollivier](https://github.com/maxolls) (tbd)
+-  Improved performance by deferring requesting objects from the `IGListAdapterDataSource` until just before diffing is executed. If n updates are coalesced into one, this results in just a single request for objects from the data source. Shipped with experiment `IGListExperimentDeferredToObjectCreation` from Ryan Nystrom.  [Maxime Ollivier](https://github.com/maxolls) [(7fc4384)](https://github.com/Instagram/IGListKit/commit/7fc4384a786968027f529ad24b8d821f671d25af)
 
-- Improved performance by using `reloadData` when there are too many diffing updates. Shipped with experiment `IGListExperimentReloadDataFallback` from Ryan Nystrom. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Improved performance by using `reloadData` when there are too many diffing updates. Shipped with experiment `IGListExperimentReloadDataFallback` from Ryan Nystrom. [Maxime Ollivier](https://github.com/maxolls) [(86ecc60)](https://github.com/Instagram/IGListKit/commit/86ecc600856b4199f8a31359140753955f02b5a4)
+
+- Small performance improvement by replacing `NSSet` with `NSArray` during the data update to avoid unnecessary hashing, especially when dealing with lots of large objects with non trivial hashes. [Maxime Ollivier](https://github.com/maxolls) [(c0cf10d)](https://github.com/Instagram/IGListKit/commit/c0cf10d84c0d41b5c02af3a9f3268e438b8e1e77)
+
+- Lazy initialize the `-emptyViewForListAdapter:` [Maxime Ollivier](https://github.com/maxolls) [(29d4640)](https://github.com/Instagram/IGListKit/commit/29d464099782813113246da47cb9c7bf4676a311)
+
+- Updated  `IGListAdapterUpdater` to be safer, more performant, and better organized! [Maxime Ollivier](https://github.com/maxolls) [(247e7ca)](https://github.com/Instagram/IGListKit/commit/247e7cac6547d52dbabf0c6fdcb7fa38b00d0e0f)
+   - Safely handles `[IGListAdapter setDataSource:]` by also invalidating the `UICollectionView` data.
+   - Safely handles `[IGListAdapter setCollectionView:]` by cancelling on-going transactions.
+   - Safely handles returning nil `IGListSectionController` from `IGListAdapterDataSource` by dumping objects that don't have a controller before the diffing.
+   - Checks that the `UICollectionView` section count matches the `IGListAdapter` before committing the update, otherwise fallback to a reload.
+   - Schedules an update block (`dispatch_async`) only when needed, instead of scheduling on every single call to `-performUpdateWithCollectionViewBlock`.
+   - Wraps each update in a `transaction` that can be easily cancelled.
+   - Uses methods instead of blocks to make the callstack easier to read in crash reports.
+   - Unblocks `IGListExperimentBackgroundDiffing`
 
 ### Fixes
 
-- `IGListCollectionViewLayout` should get the section/index counts via `UICollectionView` to stay in sync, instead of the `dataSource` [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Testing crash fix when calling `-[IGListAdapter reloadObjects ...]` during an update [Maxime Ollivier](https://github.com/maxolls) (tbd)
 
-- Remove `[collectionView layoutIfNeeded]` before scrolling in `[IGListAdapter scrollToObject...]` to avoid creating off-screen cells. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Repaired Swift Package Manager support. [Petro Rovenskyy](https://github.com/3a4oT/) [(#1487)](https://github.com/Instagram/IGListKit/pull/1487)
 
-- Remove `[collectionView layoutIfNeeded]` before updating in `[IGListAdapterUpdater performBatchUpdates...]` to fix occasional glitches. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- `IGListCollectionViewLayout` should get the section/index counts via `UICollectionView` to stay in sync, instead of the `dataSource` [Maxime Ollivier](https://github.com/maxolls) [(677ce77)](https://github.com/Instagram/IGListKit/commit/677ce77ecad11850f61436681ee1d04a5e67e96a)
 
-- Fixed `IGListAdapterUpdaterDelegate` by 1) calling `willReloadDataWithCollectionView` on fallback reloads and 2) making sure `willPerformBatchUpdatesWithCollectionView` is only called when performing a batch update. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Remove `[collectionView layoutIfNeeded]` before scrolling in `[IGListAdapter scrollToObject...]` to avoid creating off-screen cells. [Maxime Ollivier](https://github.com/maxolls) [(ea03bc9)](https://github.com/Instagram/IGListKit/commit/ea03bc959dcfdc5937655ca471135f874980f0ad)
 
-- Fixed missing update when calling `performUpdatesAnimated` multiple times quickly and using the `reloadDataFallback()`. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Remove `[collectionView layoutIfNeeded]` before updating in `[IGListAdapterUpdater performBatchUpdates...]` to fix occasional glitches. [Maxime Ollivier](https://github.com/maxolls) [(aca18c7)](https://github.com/Instagram/IGListKit/commit/aca18c747009c5d2c3825cf0af1ea1d214afba0c)
 
-- Request the `UICollectionView` until just-before we update. This way if the `UICollectionView` is changed between update-queue and execution, we guarantee the update is performed on the correct view. Ship with experiment `IGListExperimentGetCollectionViewAtUpdate` from Ryan Nystrom. [Maxime Ollivier](https://github.com/maxolls) (tbd)
+- Fixed `IGListAdapterUpdaterDelegate` by 1) calling `willReloadDataWithCollectionView` on fallback reloads and 2) making sure `willPerformBatchUpdatesWithCollectionView` is only called when performing a batch update. [Maxime Ollivier](https://github.com/maxolls) [(29bf582)](https://github.com/Instagram/IGListKit/commit/29bf582f479ddf6beb118abc83ba7a8ea87543b0)
+
+- Fixed missing update when calling `performUpdatesAnimated` multiple times quickly and using the `reloadDataFallback()`. [Maxime Ollivier](https://github.com/maxolls) [(a70d2d7)](https://github.com/Instagram/IGListKit/commit/a70d2d70ae8975af5b00f93ae596589b42017c38)
+
+- Request the `UICollectionView` until just-before we update. This way if the `UICollectionView` is changed between update-queue and execution, we guarantee the update is performed on the correct view. Ship with experiment `IGListExperimentGetCollectionViewAtUpdate` from Ryan Nystrom. [Maxime Ollivier](https://github.com/maxolls) [(34c935c)](https://github.com/Instagram/IGListKit/commit/34c935c1a5fee83283beece8f1c6b3d6344f275d)
+
+- Fixed unsigned integer overflow handling in `IGListBatchUpdateData` [Jason Hsu](https://github.com/tuoxie007) [(#1299)](https://github.com/Instagram/IGListKit/pull/1299)
 
 4.0.0
 -----
@@ -359,7 +437,7 @@ This release closes the [2.1.0 milestone](https://github.com/Instagram/IGListKit
 
 - Added support for macOS. Note: this is *only* for the Diffing components. There is **no support** for `IGListAdapter`, `IGListSectionController`, and other components at this time. [Guilherme Rambo](https://github.com/insidegui) [(#235)](https://github.com/Instagram/IGListKit/pull/235)
 
-- Added a [macOS example](https://github.com/Instagram/IGListKit/tree/master/Examples/Examples-macOS) project. [Guilherme Rambo](https://github.com/insidegui) [(#337)](https://github.com/Instagram/IGListKit/pull/337)
+- Added a [macOS example](https://github.com/Instagram/IGListKit/tree/main/Examples/Examples-macOS) project. [Guilherme Rambo](https://github.com/insidegui) [(#337)](https://github.com/Instagram/IGListKit/pull/337)
 
 - Disables `prefetchEnabled` by default on `IGListCollectionView`. [Sven Bacia](https://github.com/svenbacia) [(#323)](https://github.com/Instagram/IGListKit/pull/323)
 
@@ -434,7 +512,7 @@ You can find a [migration guide here](https://instagram.github.io/IGListKit/migr
 
 - Added support for cells created from nibs. [Sven Bacia](https://github.com/svenbacia) [(#56)](https://github.com/Instagram/IGListKit/pull/56)
 
-- Added an additional initializer for `IGListSingleSectionController` to be able to support single sections created from nibs. An example can be found [here](https://github.com/Instagram/IGListKit/tree/master/Examples/Examples-iOS/IGListKitExamples/ViewControllers/SingleSectionViewController.swift). [(#56)](https://github.com/Instagram/IGListKit/pull/56)
+- Added an additional initializer for `IGListSingleSectionController` to be able to support single sections created from nibs. An example can be found [here](https://github.com/Instagram/IGListKit/tree/main/Examples/Examples-iOS/IGListKitExamples/ViewControllers/SingleSectionViewController.swift). [(#56)](https://github.com/Instagram/IGListKit/pull/56)
 
 ```objc
 - (instancetype)initWithNibName:(NSString *)nibName

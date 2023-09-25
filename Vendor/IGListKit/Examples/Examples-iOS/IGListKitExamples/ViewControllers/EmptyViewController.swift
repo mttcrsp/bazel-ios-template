@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,11 @@ final class EmptyViewController: UIViewController, ListAdapterDataSource, Remove
         return ListAdapter(updater: ListAdapterUpdater(), viewController: self)
     }()
 
-    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+    lazy var collectionView: UICollectionView = {
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+        collectionView.backgroundColor = UIColor.secondaryBackground
+        return collectionView
+    }()
 
     let emptyLabel: UILabel = {
         let label = UILabel()
@@ -31,12 +35,9 @@ final class EmptyViewController: UIViewController, ListAdapterDataSource, Remove
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
                                                             target: self,
                                                             action: #selector(EmptyViewController.onAdd))
-
-        collectionView.backgroundColor = UIColor(white: 0.9, alpha: 1)
         view.addSubview(collectionView)
         adapter.collectionView = collectionView
         adapter.dataSource = self

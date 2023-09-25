@@ -59,7 +59,6 @@ typedef struct {
 #if IG_LIST_COLLECTION_VIEW
     [ASIGListAdapterBasedDataSource setASCollectionViewSuperclass];
 #endif
-    [ASIGListAdapterBasedDataSource configureUpdater:listAdapter.updater];
 
     ASDisplayNodeAssert([listAdapter conformsToProtocol:@protocol(UICollectionViewDataSource)], @"Expected IGListAdapter to conform to UICollectionViewDataSource.");
     ASDisplayNodeAssert([listAdapter conformsToProtocol:@protocol(UICollectionViewDelegateFlowLayout)], @"Expected IGListAdapter to conform to UICollectionViewDelegateFlowLayout.");
@@ -345,20 +344,6 @@ typedef struct {
 #pragma clang diagnostic pop
 }
 #endif
-
-/// Ensure updater won't call reloadData on us.
-+ (void)configureUpdater:(id<IGListUpdatingDelegate>)updater
-{
-  // Cast to NSObject will be removed after https://github.com/Instagram/IGListKit/pull/435
-  if ([(id<NSObject>)updater isKindOfClass:[IGListAdapterUpdater class]]) {
-    [(IGListAdapterUpdater *)updater setAllowsBackgroundReloading:NO];
-  } else {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-      NSLog(@"WARNING: Use of non-%@ updater with AsyncDisplayKit is discouraged. Updater: %@", NSStringFromClass([IGListAdapterUpdater class]), updater);
-    });
-  }
-}
 
 + (ASSupplementarySourceOverrides)overridesForSupplementarySourceClass:(Class)c
 {

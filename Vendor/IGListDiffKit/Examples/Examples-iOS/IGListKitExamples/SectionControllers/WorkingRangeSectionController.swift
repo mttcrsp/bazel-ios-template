@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -43,7 +43,7 @@ final class WorkingRangeSectionController: ListSectionController, ListWorkingRan
 
     override func cellForItem(at index: Int) -> UICollectionViewCell {
         let cellClass: UICollectionViewCell.Type = index == 0 ? LabelCell.self : ImageCell.self
-        let cell = collectionContext!.dequeueReusableCell(of: cellClass, for: self, at: index)
+        let cell = collectionContext.dequeueReusableCell(of: cellClass, for: self, at: index)
         if let cell = cell as? LabelCell {
             cell.text = urlString
         } else if let cell = cell as? ImageCell {

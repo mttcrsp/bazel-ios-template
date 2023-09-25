@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -50,18 +50,14 @@ final class MonthSectionController: ListBindingSectionController<ListDiffable>, 
     func sectionController(_ sectionController: ListBindingSectionController<ListDiffable>,
                            cellForViewModel viewModel: Any,
                            at index: Int) -> UICollectionViewCell & ListBindable {
-        let cellClass: UICollectionViewCell.Type
-        if viewModel is DayViewModel {
-            cellClass = CalendarDayCell.self
-        } else if viewModel is MonthTitleViewModel {
-            cellClass = MonthTitleCell.self
-        } else {
-            cellClass = LabelCell.self
+        switch viewModel {
+        case is DayViewModel:
+            return collectionContext.dequeueReusableCell(for: self, at: index) as CalendarDayCell
+        case is MonthTitleViewModel:
+            return collectionContext.dequeueReusableCell(for: self, at: index) as MonthTitleCell
+        default:
+            return collectionContext.dequeueReusableCell(for: self, at: index) as LabelCell
         }
-        guard let cell = collectionContext?.dequeueReusableCell(of: cellClass, for: self, at: index) as? UICollectionViewCell & ListBindable else {
-            fatalError()
-        }
-        return cell
     }
 
     func sectionController(_ sectionController: ListBindingSectionController<ListDiffable>,

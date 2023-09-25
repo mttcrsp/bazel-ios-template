@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,15 @@
 
 #import <UIKit/UIKit.h>
 
-#import <IGListDiffKit/IGListExperiments.h>
+#if __has_include(<IGListDiffKit/IGListDiffKit.h>)
 #import <IGListDiffKit/IGListMacros.h>
-#import <IGListKit/IGListAdapterUpdaterDelegate.h>
-#import <IGListKit/IGListUpdatingDelegate.h>
+#import <IGListDiffKit/IGListExperiments.h>
+#else
+#import "IGListMacros.h"
+#import "IGListExperiments.h"
+#endif
+#import "IGListUpdatingDelegate.h"
+#import "IGListAdapterUpdaterDelegate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -63,19 +68,6 @@ NS_SWIFT_NAME(ListAdapterUpdater)
 @property (nonatomic, assign) BOOL preferItemReloadsForSectionReloads;
 
 /**
- A flag indicating whether this updater should skip diffing and simply call
- `reloadData` for updates when the collection view is not in a window. The default value is `YES`.
-
- Default is YES.
-
- @note This will result in better performance, but will not generate the same delegate
- callbacks. If using a custom layout, it will not receive `prepareForCollectionViewUpdates:`.
-
- @warning On iOS < 8.3, this behavior is unsupported and will always be treated as `NO`.
- */
-@property (nonatomic, assign) BOOL allowsBackgroundReloading;
-
-/**
  If there's more than 100 diff updates, fallback to using `reloadData` to avoid stalling the main thread.
 
  Default is YES.
@@ -83,9 +75,17 @@ NS_SWIFT_NAME(ListAdapterUpdater)
 @property (nonatomic, assign) BOOL allowsReloadingOnTooManyUpdates;
 
 /**
+ Allow the diffing to be performed on a background thread.
+
+ Default is NO.
+ */
+@property (nonatomic, assign) BOOL allowsBackgroundDiffing;
+
+/**
  A bitmask of experiments to conduct on the updater.
  */
 @property (nonatomic, assign) IGListExperiment experiments;
+
 
 @end
 

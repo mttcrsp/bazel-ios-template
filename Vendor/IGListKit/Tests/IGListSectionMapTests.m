@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -98,6 +98,13 @@
 
     XCTAssertEqual(one.section, 1);
     XCTAssertFalse(one.isFirstSection);
+}
+
+- (void)test_whenQueryingItems_thatNilReturnsNotFound {
+    NSObject *object = [NSObject new];
+    object = nil;
+    IGListSectionMap *map = [[IGListSectionMap alloc] initWithMapTable:[NSMapTable strongToStrongObjectsMapTable]];
+    XCTAssertEqual([map sectionForObject:object], NSNotFound);
 }
 
 @end

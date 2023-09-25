@@ -238,6 +238,8 @@ objc_library(
     "-std=c++14",
     "-std=c++11",
     "-stdlib=libc++",
+    "-fmodules",
+    "-fcxx-modules",
     "-Wno-everything",
     "-Wnon-modular-include-in-framework-module",
     "-g",
@@ -460,6 +462,8 @@ objc_library(
   copts = [
     "-I$(GENDIR)/Vendor/IGListKit/",
     "-fobjc-weak",
+    "-fmodules",
+    "-fcxx-modules",
     "-Wno-everything",
     "-Wnon-modular-include-in-framework-module",
     "-g",

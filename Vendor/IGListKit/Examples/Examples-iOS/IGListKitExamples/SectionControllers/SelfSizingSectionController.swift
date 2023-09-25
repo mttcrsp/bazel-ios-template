@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -33,30 +33,26 @@ final class SelfSizingSectionController: ListSectionController {
         let cell: UICollectionViewCell
         switch model.type {
         case .none:
-            guard let manualCell: ManuallySelfSizingCell = collectionContext?.dequeueReusableCell(
+            let manualCell: ManuallySelfSizingCell = collectionContext.dequeueReusableCell(
                 for: self,
                 at: index
-            ) else {
-                fatalError()
-            }
+            )
             manualCell.text = text
             cell = manualCell
         case .fullWidth:
-            guard let manualCell: FullWidthSelfSizingCell = collectionContext?.dequeueReusableCell(
+            let manualCell: FullWidthSelfSizingCell = collectionContext.dequeueReusableCell(
                 for: self,
                 at: index
-            ) else {
-                fatalError()
-            }
+            )
             manualCell.text = text
             cell = manualCell
         case .nib:
-            guard let nibCell = collectionContext?.dequeueReusableCell(withNibName: "NibSelfSizingCell",
-                                                                       bundle: nil,
-                                                                       for: self,
-                                                                       at: index) as? NibSelfSizingCell else {
-                                                                        fatalError()
-            }
+            let nibCell: NibSelfSizingCell = collectionContext.dequeueReusableCell(
+                withNibName: "NibSelfSizingCell",
+                bundle: nil,
+                for: self,
+                at: index
+            )
             nibCell.contentLabel.text = text
             cell = nibCell
         }

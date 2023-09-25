@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,8 +9,13 @@
 
 #import <unordered_map>
 
+#if !__has_include(<IGListDiffKit/IGListDiffKit.h>)
+#import "IGListAssert.h"
+#else
 #import <IGListDiffKit/IGListAssert.h>
-#import <IGListDiffKit/IGListCompatibility.h>
+#endif
+
+#import "IGListCompatibility.h"
 
 // Plucks the given move from available moves and turns it into a delete + insert
 static void convertMoveToDeleteAndInsert(NSMutableSet<IGListMoveIndex *> *moves,
@@ -33,6 +38,9 @@ static void convertMoveToDeleteAndInsert(NSMutableSet<IGListMoveIndex *> *moves,
                     indexPaths:(NSMutableArray<NSIndexPath *> *)indexPaths
                        deletes:(NSMutableIndexSet *)deletes
                        inserts:(NSMutableIndexSet *)inserts {
+    if (indexPaths.count == 0) {
+        return;
+    }
     for (NSInteger i = indexPaths.count - 1; i >= 0; i--) {
         NSIndexPath *path = indexPaths[i];
         const auto it = map.find(path.section);
@@ -72,8 +80,8 @@ static void convertMoveToDeleteAndInsert(NSMutableSet<IGListMoveIndex *> *moves,
         // convert one of the item changes into a section delete+insert. this will fail hard and be VERY difficult to
         // debug
         const NSInteger moveCount = [moveSections count];
-        std::unordered_map<NSInteger, IGListMoveIndex*> fromMap(moveCount);
-        std::unordered_map<NSInteger, IGListMoveIndex*> toMap(moveCount);
+        std::unordered_map<NSInteger, IGListMoveIndex*> fromMap(MAX(moveCount, 1));
+        std::unordered_map<NSInteger, IGListMoveIndex*> toMap(MAX(moveCount, 1));
         for (IGListMoveIndex *move in moveSections) {
             const NSInteger from = move.from;
             const NSInteger to = move.to;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,8 +9,8 @@
 
 #import <objc/runtime.h>
 
-#import <IGListKit/IGListAdapterInternal.h>
-#import <IGListKit/IGListSectionController.h>
+#import "IGListAdapterInternal.h"
+#import "IGListSectionController.h"
 
 @implementation UICollectionViewLayout (InteractiveReordering)
 
@@ -70,10 +70,8 @@ static void * kIGListAdapterKey = &kIGListAdapterKey;
     NSIndexPath *updatedTarget = [self updatedTargetForInteractivelyMovingItem:previousIndexPath
                                                                    toIndexPath:originalTarget
                                                                        adapter:adapter];
-    if (updatedTarget) {
-        return updatedTarget;
-    }
-    return originalTarget;
+
+    return updatedTarget ?: originalTarget;
 }
 
 - (nullable NSIndexPath *)updatedTargetForInteractivelyMovingItem:(NSIndexPath *)previousIndexPath
@@ -177,12 +175,9 @@ static void * kIGListAdapterKey = &kIGListAdapterKey;
             }
 
             [modifiedContext invalidateItemsAtIndexPaths:invalidatedItemIndexPaths];
-            [originalContext.invalidatedSupplementaryIndexPaths enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSArray<NSIndexPath *> * _Nonnull obj, BOOL * _Nonnull stop) {
-                [modifiedContext invalidateSupplementaryElementsOfKind:key atIndexPaths:obj];
-            }];
-            [originalContext.invalidatedDecorationIndexPaths enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSArray<NSIndexPath *> * _Nonnull obj, BOOL * _Nonnull stop) {
-                [modifiedContext invalidateDecorationElementsOfKind:key atIndexPaths:obj];
-            }];
+            [self ig_invalidateAccessoryElementsWithSupplementaryIndexPaths:originalContext.invalidatedSupplementaryIndexPaths
+                                                       decorationIndexPaths:originalContext.invalidatedDecorationIndexPaths
+                                                                  inContext:modifiedContext];
             modifiedContext.contentOffsetAdjustment = originalContext.contentOffsetAdjustment;
             modifiedContext.contentSizeAdjustment = originalContext.contentSizeAdjustment;
 
@@ -190,6 +185,17 @@ static void * kIGListAdapterKey = &kIGListAdapterKey;
         }
     }
     return originalContext;
+}
+
+- (void)ig_invalidateAccessoryElementsWithSupplementaryIndexPaths:(NSDictionary<NSString *, NSArray<NSIndexPath *> *> *)supplementaryIndexPaths
+                                             decorationIndexPaths:(NSDictionary<NSString *, NSArray<NSIndexPath *> *> *)decorationIndexPaths
+                                                        inContext:(UICollectionViewLayoutInvalidationContext *)context {
+    [supplementaryIndexPaths enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSArray<NSIndexPath *> *obj, BOOL *stop) {
+        [context invalidateSupplementaryElementsOfKind:key atIndexPaths:obj];
+    }];
+    [decorationIndexPaths enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSArray<NSIndexPath *> *obj, BOOL *stop) {
+        [context invalidateDecorationElementsOfKind:key atIndexPaths:obj];
+    }];
 }
 
 @end

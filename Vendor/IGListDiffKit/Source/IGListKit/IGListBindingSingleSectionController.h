@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,7 @@
 
 #import <UIKit/UIKit.h>
 
-#import <IGListDiffKit/IGListMacros.h>
-#import <IGListKit/IGListSectionController.h>
+#import "IGListSectionController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,9 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 NS_SWIFT_NAME(ListBindingSingleSectionController)
 @interface IGListBindingSingleSectionController<__covariant ViewModel : id<IGListDiffable>, Cell : UICollectionViewCell *> : IGListSectionController
-
-// Testing the stability of this infra. Defaults to NO.
-@property (nonatomic, readwrite, assign) BOOL enabledCellConfigurationDuringUpdate;
 
 #pragma mark - Subclass
 

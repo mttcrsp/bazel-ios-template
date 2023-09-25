@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,9 +26,7 @@ final class DisplaySectionController: ListSectionController, ListDisplayDelegate
     }
 
     override func cellForItem(at index: Int) -> UICollectionViewCell {
-        guard let cell: LabelCell = collectionContext?.dequeueReusableCell(for: self, at: index) else {
-            fatalError()
-        }
+        let cell: LabelCell = collectionContext.dequeueReusableCell(for: self, at: index)
         cell.text = "Section \(self.section), cell \(index)"
         return cell
     }

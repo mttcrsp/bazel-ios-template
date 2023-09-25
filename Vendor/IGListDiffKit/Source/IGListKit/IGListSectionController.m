@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,13 @@
 
 #import "IGListSectionControllerInternal.h"
 
+#if !__has_include(<IGListDiffKit/IGListDiffKit.h>)
+#import "IGListAssert.h"
+#import "IGListMacros.h"
+#else
 #import <IGListDiffKit/IGListAssert.h>
 #import <IGListDiffKit/IGListMacros.h>
+#endif
 
 static NSString * const kIGListSectionControllerThreadKey = @"kIGListSectionControllerThreadKey";
 
@@ -79,6 +84,14 @@ void IGListSectionControllerPopThread(void) {
 }
 
 - (void)didUpdateToObject:(id)object {}
+
+- (BOOL)shouldSelectItemAtIndex:(NSInteger)index {
+    return YES;
+}
+
+- (BOOL)shouldDeselectItemAtIndex:(NSInteger)index {
+    return YES;
+}
 
 - (void)didSelectItemAtIndex:(NSInteger)index {}
 

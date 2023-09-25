@@ -1,5 +1,5 @@
 /**
-* Copyright (c) Facebook, Inc. and its affiliates.
+* Copyright (c) Meta Platforms, Inc. and affiliates.
 *
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,12 @@
 
 #import "IGListBindingSingleSectionController.h"
 
+#if !__has_include(<IGListDiffKit/IGListDiffKit.h>)
+#import "IGListAssert.h"
+#else
 #import <IGListDiffKit/IGListAssert.h>
+#endif
+
 #import "IGListSectionControllerInternal.h"
 
 @interface IGListBindingSingleSectionController ()
@@ -74,10 +79,8 @@
     }
     _item = object;
 
-    if (_enabledCellConfigurationDuringUpdate) {
-        if (_displayingCell) {
-            [self configureCell:_displayingCell withViewModel:_item];
-        }
+    if (_displayingCell) {
+        [self configureCell:_displayingCell withViewModel:_item];
     }
 }
 

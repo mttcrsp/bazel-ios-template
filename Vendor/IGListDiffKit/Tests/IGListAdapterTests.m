@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -140,6 +140,20 @@
     XCTAssertTrue(executed);
 }
 
+- (void)test_whenReloadingEmptyIndexSet_whenInvalidatingLayout_insideBatchUpdateBlock_thatOperationExitsGracefully {
+    self.dataSource.objects = @[@0, @1, @2];
+    [self.adapter performUpdatesAnimated:YES completion:nil];
+    IGListSectionController *second = [self.adapter sectionControllerForObject:@1];
+
+    __block BOOL executed = NO;
+    [self.adapter performBatchAnimated:YES updates:^(id<IGListBatchContext> batchContext) {
+        [batchContext reloadInSectionController:second atIndexes:[NSIndexSet indexSet]];
+        [batchContext invalidateLayoutInSectionController:second atIndexes:[NSIndexSet indexSet]];
+        executed = YES;
+    } completion:nil];
+    XCTAssertTrue(executed);
+}
+
 - (void)test_whenQueryingReusableIdentifier_thatIdentifierEqualsClassName {
     NSString *identifier = IGListReusableViewIdentifier(UICollectionViewCell.class, nil, nil);
     XCTAssertEqualObjects(identifier, @"UICollectionViewCell");
@@ -176,8 +190,8 @@
     ((IGListTestAdapterDataSource *)self.dataSource).backgroundView = background;
     __block BOOL executed = NO;
     [self.adapter reloadDataWithCompletion:^(BOOL finished) {
-        XCTAssertTrue(self.adapter.collectionView.backgroundView.hidden, @"Background view should be hidden");
-        XCTAssertEqualObjects(background, self.adapter.collectionView.backgroundView, @"Background view not correctly assigned");
+        UIView *backgroundViewAfterReload = self.adapter.collectionView.backgroundView;
+        XCTAssertTrue(!backgroundViewAfterReload || backgroundViewAfterReload.hidden, @"Background view should be hidden");
 
         self.dataSource.objects = @[];
         [self.adapter reloadDataWithCompletion:^(BOOL finished2) {
@@ -270,7 +284,7 @@
     XCTAssertEqual(self.collectionView.dataSource, adapter1);
 }
 
-- (void)DISABLED_test_whenCellsExtendBeyondBounds_thatVisibleSectionControllersAreLimited {
+- (void)test_whenCellsExtendBeyondBounds_thatVisibleSectionControllersAreLimited {
     // # of items for each object == [item integerValue], so @2 has 2 items (cells)
     self.dataSource.objects = @[@1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12];
     [self.adapter reloadDataWithCompletion:nil];
@@ -284,7 +298,7 @@
     XCTAssertTrue([visibleSectionControllers containsObject:[self.adapter sectionControllerForObject:@4]]);
 }
 
-- (void) test_withEmptySectionPlusFooter_thatVisibleSectionControllersAreCorrect {
+- (void)test_withEmptySectionPlusFooter_thatVisibleSectionControllersAreCorrect {
     self.dataSource.objects = @[@0];
     [self.adapter reloadDataWithCompletion:nil];
     IGTestSupplementarySource *supplementarySource = [IGTestSupplementarySource new];
@@ -301,7 +315,7 @@
     XCTAssertTrue(visibleSectionControllers.firstObject.supplementaryViewSource == supplementarySource);
 }
 
-- (void)DISABLED_test_whenCellsExtendBeyondBounds_thatVisibleCellsExistForSectionControllers {
+- (void)test_whenCellsExtendBeyondBounds_thatVisibleCellsExistForSectionControllers {
     self.dataSource.objects = @[@2, @3, @4, @5, @6];
     [self.adapter reloadDataWithCompletion:nil];
     id sectionController2 = [self.adapter sectionControllerForObject:@2];
@@ -316,7 +330,7 @@
     XCTAssertEqual([self.adapter visibleCellsForSectionController:sectionController6].count, 0);
 }
 
-- (void)DISABLED_test_whenCellsExtendBeyondBounds_thatVisibleIndexPathsExistForSectionControllers {
+- (void)test_whenCellsExtendBeyondBounds_thatVisibleIndexPathsExistForSectionControllers {
     self.dataSource.objects = @[@2, @3, @4, @5, @6];
     [self.adapter reloadDataWithCompletion:nil];
     id sectionController2 = [self.adapter sectionControllerForObject:@2];
@@ -348,7 +362,7 @@
     ((IGListTestAdapterDataSource *)self.dataSource).backgroundView = [UIView new];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertFalse(self.collectionView.backgroundView.hidden);
-    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@(0)];
+    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@0];
     sectionController.items = 1;
     [self.adapter insertInSectionController:sectionController atIndexes:[NSIndexSet indexSetWithIndex:0]];
     XCTAssertTrue(self.collectionView.backgroundView.hidden);
@@ -358,8 +372,9 @@
     self.dataSource.objects = @[@1];
     ((IGListTestAdapterDataSource *)self.dataSource).backgroundView = [UIView new];
     [self.adapter reloadDataWithCompletion:nil];
-    XCTAssertTrue(self.collectionView.backgroundView.hidden);
-    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@(1)];
+    UIView *backgroundView = self.adapter.collectionView.backgroundView;
+    XCTAssertTrue(!backgroundView || backgroundView.hidden);
+    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@1];
     sectionController.items = 0;
     [self.adapter deleteInSectionController:sectionController atIndexes:[NSIndexSet indexSetWithIndex:0]];
     XCTAssertFalse(self.collectionView.backgroundView.hidden);
@@ -370,7 +385,7 @@
     ((IGListTestAdapterDataSource *)self.dataSource).backgroundView = [UIView new];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertFalse(self.collectionView.backgroundView.hidden);
-    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@(0)];
+    IGListTestSection *sectionController = [self.adapter sectionControllerForObject:@0];
     sectionController.items = 2;
     [self.adapter reloadSectionController:sectionController];
     XCTAssertTrue(self.collectionView.backgroundView.hidden);
@@ -380,9 +395,10 @@
     self.dataSource.objects = @[@1, @2];
     ((IGListTestAdapterDataSource *)self.dataSource).backgroundView = [UIView new];
     [self.adapter reloadDataWithCompletion:nil];
-    XCTAssertTrue(self.collectionView.backgroundView.hidden);
-    IGListTestSection *firstSectionController = [self.adapter sectionControllerForObject:@(1)];
-    IGListTestSection *secondSectionController = [self.adapter sectionControllerForObject:@(2)];
+    UIView *backgroundView = self.adapter.collectionView.backgroundView;
+    XCTAssertTrue(!backgroundView || backgroundView.hidden);
+    IGListTestSection *firstSectionController = [self.adapter sectionControllerForObject:@1];
+    IGListTestSection *secondSectionController = [self.adapter sectionControllerForObject:@2];
     XCTestExpectation *expectation =  [self expectationWithDescription:NSStringFromSelector(_cmd)];
     [self.adapter performBatchAnimated:YES updates:^(id<IGListBatchContext> batchContext) {
         firstSectionController.items = 0;
@@ -614,6 +630,31 @@
     XCTAssertEqualObjects(visibleObjects, expectedObjects);
 }
 
+- (void)test_whenAdapterUpdated_withSkipViewSectionControllerMap_withObjectsOverflow_thatVisibleObjectsIsSubsetOfAllObjects {
+    self.adapter.experiments |= IGListExperimentSkipViewSectionControllerMap;
+    // each section controller returns n items sized 100x10
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    [self.adapter reloadDataWithCompletion:nil];
+    self.collectionView.contentOffset = CGPointMake(0, 30);
+    [self.collectionView layoutIfNeeded];
+
+    NSArray *visibleObjects = [[self.adapter visibleObjects] sortedArrayUsingSelector:@selector(compare:)];
+    NSArray *expectedObjects = @[@3, @4, @5];
+    XCTAssertEqualObjects(visibleObjects, expectedObjects);
+}
+
+- (void)test_whenAdapterUpdated_withSkipViewSectionControllerMap_fetchingCellIsValid {
+    self.adapter.experiments |= IGListExperimentSkipViewSectionControllerMap;
+    // each section controller returns n items sized 100x10
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    [self.adapter reloadDataWithCompletion:nil];
+    [self.collectionView layoutIfNeeded];
+
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@2];
+    UICollectionViewCell *cell = [self.adapter cellForItemAtIndex:0 sectionController:controller];
+    XCTAssertNotNil(cell);
+}
+
 - (void)test_whenAdapterUpdated_thatVisibleCellsForObjectAreFound {
     // each section controller returns n items sized 100x10
     self.dataSource.objects = @[@2, @10, @5];
@@ -654,23 +695,49 @@
     XCTAssertEqual(visibleCellsForObject.count, 0);
 }
 
+- (void)test_whenAdapterUpdated_thatFullyVisibleCellsIsCorrect {
+    // each section controller returns n items sized 100x10
+    self.dataSource.objects = @[@2, @10, @5];
+    [self.adapter reloadDataWithCompletion:nil];
+    [self.collectionView layoutIfNeeded];
+
+    // each row is 10 pixels high, and the first object has 2 rows.
+    // the window is 100 pixels highm so the number of visible cells in the second section should be 8
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@10];
+    NSArray *visibleCells = [self.adapter fullyVisibleCellsForSectionController:controller];
+    XCTAssertEqual(visibleCells.count, 8);
+}
+
+- (void)test_whenAdapterUpdated_thatFullyVisibleIndexPathsIsCorrect {
+    // each section controller returns n items sized 100x10
+    self.dataSource.objects = @[@2, @10, @5];
+    [self.adapter reloadDataWithCompletion:nil];
+    [self.collectionView layoutIfNeeded];
+
+    // each row is 10 pixels high, and the first object has 2 rows.
+    // the window is 100 pixels highm so the number of visible cells in the second section should be 8
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@10];
+    NSArray *visibleCells = [self.adapter visibleIndexPathsForSectionController:controller];
+    XCTAssertEqual(visibleCells.count, 8);
+}
+
 - (void)test_whenScrollVerticallyToItem {
     // # of items for each object == [item integerValue], so @2 has 2 items (cells)
     self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertEqual([self.collectionView numberOfSections], 6);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 10);
-    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 30);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content height minus collection view height is 110, can't scroll more than that
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 110);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 110);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 110);
 }
 
@@ -678,11 +745,11 @@
     self.dataSource.objects = @[@1, @0, @300];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertEqual([self.collectionView numberOfSections], 3);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@0 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@0 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@300 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@300 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 10);
 }
 
@@ -701,38 +768,38 @@
     [self.adapter performUpdatesAnimated:NO completion:nil];
 
     XCTAssertEqual([self.collectionView numberOfSections], 3);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@0 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@0 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@0 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    [self.adapter scrollToObject:@0 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 10);
-    [self.adapter scrollToObject:@300 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@300 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 20);
 }
 
 - (void)test_whenScrollVerticallyToItemWithPositionning {
     self.dataSource.objects = @[@1, @100, @200];
     [self.adapter reloadDataWithCompletion:nil];
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
 
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 10);
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 10);
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionCenteredVertically additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 460);
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 910);
 
-    [self.adapter scrollToObject:@200 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@200 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, self.collectionView.contentSize.height - self.collectionView.frame.size.height);
 }
 
@@ -743,24 +810,24 @@
     // no insets
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 900);
 
     // top 100
     self.collectionView.contentInset = UIEdgeInsetsMake(100, 0, 0, 0);
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 900);
 
     // bottom 100
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 100, 0);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 900 + 100);
 
     // top 50, bottom 100
     self.collectionView.contentInset = UIEdgeInsetsMake(50, 0, 100, 0);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionBottom additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 900 + 100);
 }
 
@@ -775,24 +842,24 @@
     // no insets
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 900, 0);
 
     // left 100
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 100, 0, 0);
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 900, 0);
 
     // right 100
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 0, 0, 100);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 900 + 100, 0);
 
     // left 50, right 100
     self.collectionView.contentInset = UIEdgeInsetsMake(0, 50, 0, 100);
     [self.collectionView layoutIfNeeded];
-    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight animated:NO];
+    [self.adapter scrollToObject:@100 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 900 + 100, 0);
 }
 
@@ -804,18 +871,20 @@
     self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertEqual([self.collectionView numberOfSections], 6);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionLeft additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
+    IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
+    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 10, 0);
-    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 30, 0);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content width minus collection view width is 110, can't scroll more than that
     IGAssertEqualPoint([self.collectionView contentOffset], 110, 0);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionCenteredHorizontally additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 110, 0);
-    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight animated:NO];
+    [self.adapter scrollToObject:@6 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionRight additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 110, 0);
     self.layout.scrollDirection = UICollectionViewScrollDirectionVertical;
     self.adapter.dataSource = self.dataSource;
@@ -836,9 +905,9 @@
     [self.adapter performUpdatesAnimated:NO completion:nil];
 
     XCTAssertNotNil([self.collectionView supplementaryViewForElementKind:UICollectionElementKindSectionHeader atIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]]);
-    [self.adapter scrollToObject:@1 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@2 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@2 supplementaryKinds:@[UICollectionElementKindSectionHeader] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content height smaller than collection view height, won't scroll
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
 }
@@ -859,9 +928,9 @@
 
     XCTAssertNotNil([self.collectionView supplementaryViewForElementKind:UICollectionElementKindSectionHeader atIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]]);
     XCTAssertNotNil([self.collectionView supplementaryViewForElementKind:UICollectionElementKindSectionFooter atIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]]);
-    [self.adapter scrollToObject:@1 supplementaryKinds:@[UICollectionElementKindSectionHeader, UICollectionElementKindSectionFooter] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:@[UICollectionElementKindSectionHeader, UICollectionElementKindSectionFooter] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@2 supplementaryKinds:@[UICollectionElementKindSectionHeader, UICollectionElementKindSectionFooter] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@2 supplementaryKinds:@[UICollectionElementKindSectionHeader, UICollectionElementKindSectionFooter] scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content height smaller than collection view height, won't scroll
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
 }
@@ -870,7 +939,7 @@
     self.dataSource.objects = @[];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertEqual([self.collectionView numberOfSections], 0);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
 }
 
@@ -879,14 +948,14 @@
     self.dataSource.objects = @[@1, @2, @3, @4];
     [self.adapter reloadDataWithCompletion:nil];
     XCTAssertEqual([self.collectionView numberOfSections], 4);
-    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@5 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@5 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@2 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content height is smaller than collection view height, can't scroll
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
-    [self.adapter scrollToObject:@5 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone animated:NO];
+    [self.adapter scrollToObject:@5 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
     // Content height is smaller than collection view height, can't scroll
     IGAssertEqualPoint([self.collectionView contentOffset], 0, 0);
 }
@@ -899,7 +968,7 @@
 
     // # of items for each object == [item integerValue], so @2 has 2 items (cells)
     // Assumptions: UICollectionView size is (100,100), each cell size is (100,10)
-    [self.adapter scrollToObject:@22 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    [self.adapter scrollToObject:@22 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionTop additionalOffset:0 animated:NO];
 
     // Force the layout, which creates the cells
     [self.collectionView layoutIfNeeded];
@@ -911,6 +980,242 @@
 
     XCTAssertFalse(firstSection.wasDisplayed);
     XCTAssertTrue(lastSection.wasDisplayed);
+}
+
+- (void)test_whenScrolledVertically_thatIndexPathForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3];
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 3);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(0, 8) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(0, 12) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:1]);
+    [self.collectionView setContentOffset:CGPointMake(0, 35) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(0, 40) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:1 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(0, 59) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:2 inSection:2]);
+}
+
+- (void)test_whenScrolledVerticallyWithContentInset_thatIndexPathForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 5;
+    self.collectionView.contentInset = UIEdgeInsetsMake(inset, 0, inset, 0);
+    self.dataSource.objects = @[@1, @2, @3];
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 3);
+    [self.collectionView setContentOffset:CGPointMake(0, 0 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(0, 8 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(0, 12 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:1]);
+    [self.collectionView setContentOffset:CGPointMake(0, 35 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(0, 40 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:1 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(0, 59 - inset) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:2 inSection:2]);
+}
+
+- (void)test_whenScrolledHorizontallyWithSingleRow_thatIndexPathForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3, @4];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    self.collectionView.frame = CGRectMake(0, 0, 300, 10);
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 4);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(80, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(120, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:1]);
+    [self.collectionView setContentOffset:CGPointMake(350, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(400, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:1 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(590, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:2 inSection:2]);
+}
+
+- (void)test_whenScrolledHorizontallyWithSingleRowWithContentInset_thatIndexPathForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 172;
+    self.collectionView.contentInset = UIEdgeInsetsMake(0, inset, 0, inset);
+    self.dataSource.objects = @[@1, @2, @3, @4];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    self.collectionView.frame = CGRectMake(0, 0, 300, 10);
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 4);
+    [self.collectionView setContentOffset:CGPointMake(0 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(80 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(120 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:1]);
+    [self.collectionView setContentOffset:CGPointMake(350 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(400 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:1 inSection:2]);
+    [self.collectionView setContentOffset:CGPointMake(590 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:2 inSection:2]);
+}
+
+- (void)test_whenScrolledHorizontallyWithStackedSections_thatIndexPathForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(80, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:0]);
+    [self.collectionView setContentOffset:CGPointMake(120, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:1]);
+    [self.collectionView setContentOffset:CGPointMake(350, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:3]);
+    [self.collectionView setContentOffset:CGPointMake(400, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:4]);
+    [self.collectionView setContentOffset:CGPointMake(590, 0) animated:NO];
+    XCTAssertEqual([self.adapter indexPathForFirstVisibleItem], [NSIndexPath indexPathForItem:0 inSection:5]);
+}
+
+- (void)test_whenScrolledVertically_thatOffsetForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.collectionView setContentOffset:CGPointMake(0, 8) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 8);
+    [self.collectionView setContentOffset:CGPointMake(0, 12) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 2);
+    [self.collectionView setContentOffset:CGPointMake(0, 35) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 5);
+    [self.collectionView setContentOffset:CGPointMake(0, 40) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.collectionView setContentOffset:CGPointMake(0, 59) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 9);
+}
+
+- (void)test_whenScrolledVerticallyWithContentInset_thatOffsetForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 5;
+    self.collectionView.contentInset = UIEdgeInsetsMake(inset, 0, inset, 0);
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.collectionView setContentOffset:CGPointMake(0, 0 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.collectionView setContentOffset:CGPointMake(0, 8 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 8);
+    [self.collectionView setContentOffset:CGPointMake(0, 12 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 2);
+    [self.collectionView setContentOffset:CGPointMake(0, 35 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 5);
+    [self.collectionView setContentOffset:CGPointMake(0, 40 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.collectionView setContentOffset:CGPointMake(0, 59 - inset) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 9);
+}
+
+- (void)test_whenScrolledHorizontallyWithSingleRow_thatOffsetForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3, @4];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    self.collectionView.frame = CGRectMake(0, 0, 300, 10);
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 4);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(80, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 80);
+    [self.collectionView setContentOffset:CGPointMake(120, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 20);
+    [self.collectionView setContentOffset:CGPointMake(350, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 50);
+    [self.collectionView setContentOffset:CGPointMake(400, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(599, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 99);
+}
+
+- (void)test_whenScrolledHorizontallyWithSingleRowWithContentInset_thatOffsetForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 172;
+    self.collectionView.contentInset = UIEdgeInsetsMake(0, inset, 0, inset);
+    self.dataSource.objects = @[@1, @2, @3, @4];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    self.collectionView.frame = CGRectMake(0, 0, 300, 10);
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 4);
+    [self.collectionView setContentOffset:CGPointMake(0 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(80 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 80);
+    [self.collectionView setContentOffset:CGPointMake(120 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 20);
+    [self.collectionView setContentOffset:CGPointMake(350 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 50);
+    [self.collectionView setContentOffset:CGPointMake(400 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(599 - inset, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 99);
+}
+
+- (void)test_whenScrolledHorizontallyWithStackedSections_thatOffsetForFirstVisibleItemIsCorrect {
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(80, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 80);
+    [self.collectionView setContentOffset:CGPointMake(120, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 20);
+    [self.collectionView setContentOffset:CGPointMake(350, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 50);
+    [self.collectionView setContentOffset:CGPointMake(400, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.collectionView setContentOffset:CGPointMake(599, 0) animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 99);
+}
+
+- (void)test_whenScrollToIndexPathWithAdditionalOffsetVerticially_thatOffsetForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 5;
+    self.collectionView.contentInset = UIEdgeInsetsMake(inset, 0, inset, 0);
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:7 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 7);
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 0);
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:3 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 3);
+    [self.adapter scrollToObject:@4 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionVertical scrollPosition:UICollectionViewScrollPositionNone additionalOffset:9 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionVertical], 9);
+}
+
+- (void)test_whenScrollToIndexPathWithAdditionalOffsetHorizontally_thatOffsetForFirstVisibleItemIsCorrect {
+    const CGFloat inset = 172;
+    self.collectionView.contentInset = UIEdgeInsetsMake(0, inset, 0, inset);
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6];
+    self.layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    [self.adapter reloadDataWithCompletion:nil];
+    XCTAssertEqual([self.collectionView numberOfSections], 6);
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.adapter scrollToObject:@1 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:73 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 73);
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:0 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 0);
+    [self.adapter scrollToObject:@3 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:36 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 36);
+    [self.adapter scrollToObject:@4 supplementaryKinds:nil scrollDirection:UICollectionViewScrollDirectionHorizontal scrollPosition:UICollectionViewScrollPositionNone additionalOffset:99 animated:NO];
+    XCTAssertEqual([self.adapter offsetForFirstVisibleItemWithScrollDirection:UICollectionViewScrollDirectionHorizontal], 99);
 }
 
 - (void)test_whenQueryingIndexPath_withOOBSectionController_thatNilReturned {
@@ -933,7 +1238,7 @@
 - (void)test_whenQueryingSectionControllerForSection_thatControllerReturned {
 	self.dataSource.objects = @[@0, @1, @2];
 	[self.adapter reloadDataWithCompletion:nil];
-	
+
 	XCTAssertEqual([self.adapter sectionControllerForSection:0], [self.adapter sectionControllerForObject:@0]);
 	XCTAssertEqual([self.adapter sectionControllerForSection:1], [self.adapter sectionControllerForObject:@1]);
 	XCTAssertEqual([self.adapter sectionControllerForSection:2], [self.adapter sectionControllerForObject:@2]);
@@ -999,7 +1304,7 @@
     self.dataSource.objects = @[@0, @1, @2];
     [self.adapter reloadDataWithCompletion:nil];
 
-    id mockDelegate = [OCMockObject mockForProtocol:@protocol(IGListUpdatingDelegate)];
+    id mockDelegate = [OCMockObject niceMockForProtocol:@protocol(IGListUpdatingDelegate)];
     [[mockDelegate reject] reloadCollectionView:[OCMArg any] sections:[OCMArg any]];
     self.adapter.updater = mockDelegate;
 
@@ -1019,10 +1324,19 @@
     NSIndexPath *indexPath = [NSIndexPath indexPathForItem:0 inSection:0];
     [[mockDelegate expect] collectionView:self.collectionView didSelectItemAtIndexPath:indexPath];
 
-    // simulates the collectionview telling its delegate that it was tapped
+    // simulates the collection view telling its delegate that it was tapped
     [self.adapter collectionView:self.collectionView didSelectItemAtIndexPath:indexPath];
 
     [mockDelegate verify];
+}
+
+- (void)test_whenSelectingCell_thatSelectionConfirmationDelegatesReturnValues {
+    self.dataSource.objects = @[@0, @1, @2];
+    [self.adapter reloadDataWithCompletion:nil];
+
+    NSIndexPath *indexPath = [NSIndexPath indexPathForItem:0 inSection:0];
+    XCTAssertTrue([self.adapter collectionView:self.collectionView shouldSelectItemAtIndexPath:indexPath]);
+    XCTAssertTrue([self.adapter collectionView:self.collectionView shouldDeselectItemAtIndexPath:indexPath]);
 }
 
 - (void)test_whenSelectingCell_thatSectionControllerReceivesMethod {
@@ -1141,14 +1455,20 @@
     self.adapter.collectionViewDelegate = mockCollectionDelegate;
     self.adapter.scrollViewDelegate = mockScrollDelegate;
 
+    id mockSectionControllerScrollDelegate = [OCMockObject mockForProtocol:@protocol(IGListScrollDelegate)];
+    IGListSectionController *firstController = [self.adapter.visibleSectionControllers firstObject];
+    firstController.scrollDelegate = mockSectionControllerScrollDelegate;
+
     [[mockCollectionDelegate reject] scrollViewDidEndDecelerating:self.collectionView];
     [[mockScrollDelegate expect] scrollViewDidEndDecelerating:self.collectionView];
+    [[mockSectionControllerScrollDelegate expect] listAdapter:self.adapter didEndDeceleratingSectionController:firstController];
 
     // simulates the scrollview delegate telling the adapter that it ended decelerating
     [self.adapter scrollViewDidEndDecelerating:self.collectionView];
 
     [mockCollectionDelegate verify];
     [mockScrollDelegate verify];
+    [mockSectionControllerScrollDelegate verify];
 }
 
 - (void)test_whenReloadingObjectsThatDontExist_thatAdapterContinues {
@@ -1180,7 +1500,7 @@
     XCTAssertTrue([[self.collectionView cellForItemAtIndexPath:path] isSelected]);
 }
 
-- (void)DISABLED_test_whenScrollingToIndex_withSectionController_thatPositionCorrect {
+- (void)test_whenScrollingToIndex_withSectionController_thatPositionCorrect {
     self.dataSource.objects = @[@1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12, @13, @14, @15, @16, @17, @18, @19];
     [self.adapter reloadDataWithCompletion:nil];
 
@@ -1213,6 +1533,19 @@
     XCTAssertNotNil([self.collectionView supplementaryViewForElementKind:UICollectionElementKindSectionHeader atIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]]);
 
     [mockDisplayDelegate verify];
+}
+
+- (void)test_whenDisplayingSectionController_fetchingCellIndexIsValid {
+    self.dataSource.objects = @[@0, @1, @2];
+    [self.adapter reloadDataWithCompletion:nil];
+
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@1];
+    UICollectionViewCell *cell = [self.adapter cellForItemAtIndex:0 sectionController:controller];
+    XCTAssertNotNil(cell);
+
+    NSInteger index = [self.adapter indexForCell:cell sectionController:controller];
+    XCTAssertNotEqual(index, NSNotFound);
+    XCTAssertEqual(index, 0);
 }
 
 - (void)test_whenEndingDisplayOfSectionController_withOnlySupplementaryView_thatDisplayEventStillSent {
@@ -1260,6 +1593,23 @@
 }
 
 - (void)test_whenEndDisplayingSupplementaryView_thatCollectionViewDelegateReceivesEvents {
+    // silence display handler asserts
+    self.dataSource.objects = @[@1, @2];
+    [self.adapter reloadDataWithCompletion:nil];
+
+    id mockDelegate = [OCMockObject mockForProtocol:@protocol(UICollectionViewDelegate)];
+    self.adapter.collectionViewDelegate = mockDelegate;
+    UICollectionReusableView *view = [UICollectionReusableView new];
+    NSString *kind = @"kind";
+    NSIndexPath *path = [NSIndexPath indexPathForItem:0 inSection:0];
+    [[mockDelegate expect] collectionView:self.collectionView didEndDisplayingSupplementaryView:view forElementOfKind:kind atIndexPath:path];
+    [self.adapter collectionView:self.collectionView didEndDisplayingSupplementaryView:view forElementOfKind:kind atIndexPath:path];
+    [mockDelegate verify];
+}
+
+- (void)test_whenEndDisplayingSupplementaryView_withSkipViewSectionControllerMap_thatCollectionViewDelegateReceivesEvents {
+    self.adapter.experiments |= IGListExperimentSkipViewSectionControllerMap;
+
     // silence display handler asserts
     self.dataSource.objects = @[@1, @2];
     [self.adapter reloadDataWithCompletion:nil];
@@ -1398,7 +1748,7 @@
     XCTAssertEqual(inset.right, 4);
 }
 
-- (void)DISABLED_test_whenQueryingInsetContainerSize_thatResultIsBoundsInsetByContent {
+- (void)test_whenQueryingInsetContainerSize_thatResultIsBoundsInsetByContent {
     self.dataSource.objects = @[@2];
     [self.adapter reloadDataWithCompletion:nil];
     self.collectionView.contentInset = UIEdgeInsetsMake(1, 2, 3, 4);
@@ -1406,6 +1756,16 @@
     const CGSize size = [controller.collectionContext insetContainerSize];
     XCTAssertEqual(size.width, 94);
     XCTAssertEqual(size.height, 96);
+}
+
+- (void)test_whenQueryingContainerContentOffset_thatResultIsCorrectlyOffset {
+    self.dataSource.objects = @[@1, @2, @3, @4, @5, @6, @7, @8, @9, @10];
+    [self.adapter reloadDataWithCompletion:nil];
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@3];
+    [self.adapter scrollToSectionController:controller atIndex:0 scrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    const CGPoint offset = [controller.collectionContext containerContentOffset];
+    XCTAssertEqual(offset.x, 0);
+    XCTAssertEqual(offset.y, 30);
 }
 
 - (void)test_whenInsertingAtBeginning_thatAllSectionControllerIndexesUpdateCorrectly_forInsertAtHead {
@@ -1719,6 +2079,32 @@
     XCTAssertEqual(sectionObjects[0], section.sectionObject.objects[2]);
 }
 
+- (void)test_whenItemsInSectionAreInteractivelyReordered_andReorderingIsDisallowed_thatIndexesUpdateCorrectly {
+    IGListTestAdapterReorderingDataSource *dataSource = [IGListTestAdapterReorderingDataSource new];
+    dataSource.objects = @[@0];
+    self.adapter.dataSource = dataSource;
+    self.adapter.moveDelegate = dataSource;
+
+    NSArray *sectionObjects = @[@0, @1, @2];
+
+    IGTestReorderableSection *section = (IGTestReorderableSection *)[self.adapter sectionControllerForSection:0];
+    section.sectionObject = [IGTestReorderableSectionObject sectionWithObjects:sectionObjects];
+    section.isReorderable = NO;
+
+    [self.adapter performUpdatesAnimated:NO completion:nil];
+
+    NSIndexPath *fromIndexPath, *toIndexPath;
+
+    // move the last item into the first position
+    fromIndexPath = [NSIndexPath indexPathForItem:2 inSection:0];
+    toIndexPath = [NSIndexPath indexPathForItem:0 inSection:0];
+    [self.adapter collectionView:self.collectionView moveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
+
+    XCTAssertEqual(sectionObjects[0], section.sectionObject.objects[0]);
+    XCTAssertEqual(sectionObjects[1], section.sectionObject.objects[1]);
+    XCTAssertEqual(sectionObjects[2], section.sectionObject.objects[2]);
+}
+
 - (void)test_whenItemsAreInteractivelyReorderedAcrossSections_thatIndexesRevertToOriginalState {
     IGListTestAdapterReorderingDataSource *dataSource = [IGListTestAdapterReorderingDataSource new];
     dataSource.objects = @[@0, @1];
@@ -1756,6 +2142,41 @@
     XCTAssertEqual(section1Objects[0], section1.sectionObject.objects[0]);
     XCTAssertEqual(section1Objects[1], section1.sectionObject.objects[1]);
     XCTAssertEqual(section1Objects[2], section1.sectionObject.objects[2]);
+}
+
+- (void)test_whenSingleItemsAreInteractivelyReorderedAcrossSections_thatIndexesRevertToOriginalState {
+    IGListTestAdapterReorderingDataSource *dataSource = [IGListTestAdapterReorderingDataSource new];
+    dataSource.objects = @[@0, @1];
+    self.adapter.dataSource = dataSource;
+    self.adapter.moveDelegate = dataSource;
+
+    NSArray *section0Objects = @[@0];
+    NSArray *section1Objects = @[@3];
+
+    IGTestReorderableSection *section0 = (IGTestReorderableSection *)[self.adapter sectionControllerForSection:0];
+    section0.sectionObject = [IGTestReorderableSectionObject sectionWithObjects:section0Objects];
+    IGTestReorderableSection *section1 = (IGTestReorderableSection *)[self.adapter sectionControllerForSection:1];
+    section1.sectionObject = [IGTestReorderableSectionObject sectionWithObjects:section1Objects];
+    section1.isReorderable = YES;
+
+    [self.adapter performUpdatesAnimated:NO completion:nil];
+
+    NSIndexPath *fromIndexPath, *toIndexPath;
+
+    // move an item from section 1 to section 0 and check that they are reverted
+    fromIndexPath = [NSIndexPath indexPathForItem:0 inSection:1];
+    toIndexPath = [NSIndexPath indexPathForItem:0 inSection:0];
+
+    [self.collectionView performBatchUpdates:^{
+        [self.collectionView moveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
+
+        [self.collectionView.dataSource collectionView:self.collectionView
+                                   moveItemAtIndexPath:fromIndexPath
+                                           toIndexPath:toIndexPath];
+    } completion:nil];
+
+    XCTAssertEqual(section0Objects[0], section0.sectionObject.objects[0]);
+    XCTAssertEqual(section1Objects[0], section1.sectionObject.objects[0]);
 }
 
 - (void)test_whenSingleItemInSectionIsInteractivelyReorderedThorughLastSpot_indexesUpdateCorrectly {
@@ -1894,6 +2315,41 @@
     self.dataSource.objects = @[@2];
     [self.adapter performUpdatesAnimated:NO completion:nil];
     [sectionController.collectionContext invalidateLayoutForSectionController:sectionController completion:nil];
+}
+
+- (void)test_whenSettingSupplementaryView_thatViewForSupplementaryElementExists {
+    self.dataSource.objects = @[@0];
+    [self.adapter reloadDataWithCompletion:nil];
+
+    IGTestSupplementarySource *supplementarySource = [IGTestSupplementarySource new];
+    supplementarySource.collectionContext = self.adapter;
+    supplementarySource.supportedElementKinds = @[UICollectionElementKindSectionHeader];
+
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@0];
+    controller.supplementaryViewSource = supplementarySource;
+    supplementarySource.sectionController = controller;
+
+    [self.adapter performUpdatesAnimated:NO completion:nil];
+    XCTAssertNotNil([self.adapter viewForSupplementaryElementOfKind:UICollectionElementKindSectionHeader atIndex:0 sectionController:controller]);
+    XCTAssertNil([self.adapter viewForSupplementaryElementOfKind:UICollectionElementKindSectionHeader atIndex:1 sectionController:controller]);
+}
+
+- (void)test_whenSettingSupplementaryView_withSkipViewSectionControllerMap_thatViewForSupplementaryElementExists {
+    self.adapter.experiments |= IGListExperimentSkipViewSectionControllerMap;
+    self.dataSource.objects = @[@0];
+    [self.adapter reloadDataWithCompletion:nil];
+
+    IGTestSupplementarySource *supplementarySource = [IGTestSupplementarySource new];
+    supplementarySource.collectionContext = self.adapter;
+    supplementarySource.supportedElementKinds = @[UICollectionElementKindSectionHeader];
+
+    IGListSectionController *controller = [self.adapter sectionControllerForObject:@0];
+    controller.supplementaryViewSource = supplementarySource;
+    supplementarySource.sectionController = controller;
+
+    [self.adapter performUpdatesAnimated:NO completion:nil];
+    XCTAssertNotNil([self.adapter viewForSupplementaryElementOfKind:UICollectionElementKindSectionHeader atIndex:0 sectionController:controller]);
+    XCTAssertNil([self.adapter viewForSupplementaryElementOfKind:UICollectionElementKindSectionHeader atIndex:1 sectionController:controller]);
 }
 
 @end

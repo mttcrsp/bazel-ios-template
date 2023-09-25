@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -37,9 +37,9 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.ios.deployment_target = '9.0'
-  s.tvos.deployment_target = '9.0'
-  s.osx.deployment_target = '10.11'
+  s.ios.deployment_target = '11.0'
+  s.tvos.deployment_target = '11.0'
+  s.osx.deployment_target = '10.13'
 
   s.ios.frameworks = 'UIKit'
   s.tvos.frameworks = 'UIKit'
@@ -47,6 +47,8 @@ Pod::Spec.new do |s|
 
   s.library = 'c++'
   s.pod_target_xcconfig = {
+    'OTHER_CFLAGS' => '-fmodules',
+    'OTHER_CPLUSPLUSFLAGS' => '-fcxx-modules',
     'CLANG_CXX_LANGUAGE_STANDARD' => 'c++11',
     'CLANG_CXX_LIBRARY' => 'libc++',
   }

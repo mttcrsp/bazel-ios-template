@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -68,6 +68,14 @@ static NSArray *sorted(NSArray *arr) {
     IGListIndexPathResult *result = IGListDiffPaths(0, 1, o, n, IGListDiffEquality);
     XCTAssertEqualObjects([result oldIndexPathForIdentifier:@1], [NSIndexPath indexPathForItem:0 inSection:0]);
     XCTAssertEqualObjects([result oldIndexPathForIdentifier:@2], [NSIndexPath indexPathForItem:1 inSection:0]);
+}
+
+- (void)test_whenDiffingFromEmptyArray_thatNewIndexPathsAreCorrect {
+    NSArray *o = @[];
+    NSArray *n = @[@1, @2];
+    IGListIndexPathResult *result = IGListDiffPaths(0, 1, o, n, IGListDiffEquality);
+    XCTAssertEqualObjects([result newIndexPathForIdentifier:@1], [NSIndexPath indexPathForItem:0 inSection:1]);
+    XCTAssertEqualObjects([result newIndexPathForIdentifier:@2], [NSIndexPath indexPathForItem:1 inSection:1]);
 }
 
 - (void)test_whenSwappingObjects_thatResultHasMoves {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,6 @@ final class CalendarDayCell: UICollectionViewCell {
         let view = UILabel()
         view.backgroundColor = .clear
         view.textAlignment = .center
-        view.textColor = .black
         view.font = .boldSystemFont(ofSize: 16)
         view.layer.borderWidth = 2
         view.clipsToBounds = true

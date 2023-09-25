@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
 import IGListKit
 import IGListSwiftKit
 
-protocol RemoveSectionControllerDelegate: class {
+protocol RemoveSectionControllerDelegate: AnyObject {
     func removeSectionControllerWantsRemoved(_ sectionController: RemoveSectionController)
 }
 
@@ -27,9 +27,7 @@ final class RemoveSectionController: ListSectionController, RemoveCellDelegate {
     }
 
     override func cellForItem(at index: Int) -> UICollectionViewCell {
-        guard let cell: RemoveCell = collectionContext?.dequeueReusableCell(for: self, at: index) else {
-            fatalError()
-        }
+        let cell: RemoveCell = collectionContext.dequeueReusableCell(for: self, at: index)
         cell.text = "Cell: \((number ?? 0) + 1)"
         cell.delegate = self
         return cell

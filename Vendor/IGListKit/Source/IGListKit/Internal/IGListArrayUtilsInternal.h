@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,11 @@
 #ifndef IGListArrayUtilsInternal_h
 #define IGListArrayUtilsInternal_h
 
-#import <IGListDiffKit/IGListAssert.h>
+#if !__has_include(<IGListDiffKit/IGListDiffKit.h>)
+#import "IGListBatchUpdateData.h"
+#else
+#import <IGListDiffKit/IGListBatchUpdateData.h>
+#endif
 
 static NSArray *objectsWithDuplicateIdentifiersRemoved(NSArray<id<IGListDiffable>> *objects) {
     if (objects == nil) {
