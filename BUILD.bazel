@@ -6,7 +6,6 @@ tidy(
   name = "tidy",
   targets = [
     ":swift_update_pkgs",
-    ":update_build_files",
   ],
 )
 
