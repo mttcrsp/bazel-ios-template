@@ -124,6 +124,7 @@ objc_library(
       "Source/IGListDiffKit/**/*.m"
     ]
   ),
+  module_map = ":IGListDiffKit_module_map",
   hdrs = [
     ":IGListDiffKit_cxx_hdrs"
   ],
@@ -145,9 +146,11 @@ objc_library(
     "c++"
   ],
   deps = [
-    ":IGListDiffKit_cxx_includes"
+    ":IGListDiffKit_cxx_includes",
+    ":IGListDiffKit_module_map"
   ],
   copts = [
+    "-I$(GENDIR)/Vendor/IGListDiffKit/",
     "-std=c++14",
     "-std=c++11",
     "-stdlib=libc++",
@@ -262,6 +265,7 @@ objc_library(
       "Source/IGListDiffKit/**/*.m"
     ]
   ),
+  module_map = ":IGListDiffKit_module_map",
   hdrs = [
     ":IGListDiffKit_hdrs"
   ],
@@ -284,9 +288,11 @@ objc_library(
   ],
   deps = [
     ":IGListDiffKit_cxx",
-    ":IGListDiffKit_includes"
+    ":IGListDiffKit_includes",
+    ":IGListDiffKit_module_map"
   ],
   copts = [
+    "-I$(GENDIR)/Vendor/IGListDiffKit/",
     "-fobjc-weak",
     "-Wno-everything",
     "-Wnon-modular-include-in-framework-module",
@@ -326,4 +332,14 @@ acknowledged_target(
   name = "IGListDiffKit_acknowledgement",
   deps = [],
   value = "//Vendor/IGListDiffKit/pod_support_buildable:acknowledgement_fragment"
+)
+gen_module_map(
+  name = "IGListDiffKit_module_map",
+  module_name = "IGListDiffKit",
+  hdrs = [
+    "IGListDiffKit_public_hdrs"
+  ],
+  visibility = [
+    "//visibility:public"
+  ]
 )

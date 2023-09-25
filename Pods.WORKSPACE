@@ -1,12 +1,20 @@
 new_pod_repository(
   name = "IGListDiffKit",
   url = "https://github.com/instagram/IGListKit/archive/aca18c747009c5d2c3825cf0af1ea1d214afba0c.zip",
+  generate_module_map = True,
 )
 
 new_pod_repository(
   name = "IGListKit",
   url = "https://github.com/instagram/IGListKit/archive/aca18c747009c5d2c3825cf0af1ea1d214afba0c.zip",
   user_options = ["Core.deps += //Vendor/IGListDiffKit:IGListDiffKit"],
+  generate_module_map = True,
+)
+
+new_pod_repository(
+  name = "IGListSwiftKit",
+  url = "https://github.com/instagram/IGListKit/archive/25d1887a41f2c849f96c2a198064fe4418791843.zip",
+  user_options = ["Core.deps += //Vendor/IGListDiffKit:IGListKit"],
   generate_module_map = True,
 )
 

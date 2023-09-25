@@ -2,6 +2,7 @@ import UIKit
 import ComposableArchitecture
 import IGListKit
 import AsyncDisplayKit
+import IGListSwiftKit
 
 @UIApplicationMain
 final class ApplicationDelegate: UIResponder, UIApplicationDelegate {
@@ -23,7 +24,14 @@ struct Feature: Reducer {
   }
 }
 
-final class SectionController: ListSectionController {
+struct SectionControllerConfiguration: Hashable, ListIdentifiable {
+  let rawValue: String
+  var diffIdentifier: NSObjectProtocol {
+    rawValue as NSString
+  }
+}
+
+final class SectionController: ListValueSectionController<SectionControllerConfiguration> {
   override func numberOfItems() -> Int {
     1
   }
