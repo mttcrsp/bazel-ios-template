@@ -4,35 +4,35 @@ load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
 load("@rules_cc//cc:defs.bzl", "objc_library")
 
 swift_library(
-  name = "app_lib",
-  srcs = ["App.swift"],
-  tags = ["manual"],
-  visibility = ["//visibility:public"],
-  deps = [
-    "@swiftpkg_swift_composable_architecture//:ComposableArchitecture",
-    "//Vendor/IGListSwiftKit:IGListSwiftKit",
-    "//Vendor/IGListKit:IGListKit",
-    "//Vendor/Texture:Texture",
-  ],
+    name = "app_lib",
+    srcs = ["App.swift"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//Vendor/IGListKit",
+        "//Vendor/IGListSwiftKit",
+        "//Vendor/Texture",
+        "@swiftpkg_swift_composable_architecture//:ComposableArchitecture",
+    ],
 )
 
 ios_application(
-  name = "app",
-  bundle_id = "com.example.app",
-  families = ["iphone"],
-  infoplists = ["Info.plist"],
-  minimum_os_version = "16.0",
-  sdk_frameworks = [
-    "SystemConfiguration",
-    "MobileCoreServices",
-  ],
-  visibility = ["//visibility:public"],
-  deps = [":app_lib"],
+    name = "app",
+    bundle_id = "com.example.app",
+    families = ["iphone"],
+    infoplists = ["Info.plist"],
+    minimum_os_version = "16.0",
+    sdk_frameworks = [
+        "SystemConfiguration",
+        "MobileCoreServices",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":app_lib"],
 )
 
 xcodeproj(
-  name = "proj",
-  project_name = "App",
-  tags = ["manual"],
-  top_level_targets = [":app"],
+    name = "proj",
+    project_name = "App",
+    tags = ["manual"],
+    top_level_targets = [":app"],
 )
