@@ -1,14 +1,14 @@
-import UIKit
+import AsyncDisplayKit
+import Combine
 import ComposableArchitecture
 import IGListKit
-import AsyncDisplayKit
 import IGListSwiftKit
-import Combine
+import UIKit
 
 @UIApplicationMain
 final class ApplicationDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
-  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
     let store = Store(initialState: .init(), reducer: Feature.init)
     window = UIWindow()
     window?.rootViewController = ViewController(store: store)
@@ -23,11 +23,11 @@ struct Feature {
   struct State {
     var count = 1
   }
-  
+
   enum Action {
     case increment
   }
-  
+
   var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
@@ -46,7 +46,7 @@ class ViewController: ASDKViewController<ASCollectionNode> {
 
   init(store: StoreOf<Feature>) {
     self.store = store
-    
+
     let collectionLayout = UICollectionViewFlowLayout()
     let collectionNode = ASCollectionNode(collectionViewLayout: collectionLayout)
     collectionNode.backgroundColor = .systemBackground
@@ -54,12 +54,14 @@ class ViewController: ASDKViewController<ASCollectionNode> {
 
     adapter.setASDKCollectionNode(node)
     adapter.dataSource = self
-    
-    store.publisher.sink { [weak self] _ in
-      self?.adapter.performUpdates(animated: true)
-    }.store(in: &cancellables)
+
+    store.publisher
+      .sink { [weak self] _ in
+        self?.adapter.performUpdates(animated: true)
+      }
+      .store(in: &cancellables)
   }
-  
+
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
@@ -89,7 +91,6 @@ extension ViewController: SectionControllerDelegate {
   }
 }
 
-
 struct SectionControllerConfiguration: Hashable, ListIdentifiable {
   let text: String
   var diffIdentifier: NSObjectProtocol {
@@ -103,7 +104,7 @@ protocol SectionControllerDelegate: AnyObject {
 
 final class SectionController: ListValueSectionController<SectionControllerConfiguration> {
   weak var delegate: SectionControllerDelegate?
-  
+
   override func numberOfItems() -> Int {
     1
   }
@@ -117,7 +118,7 @@ final class SectionController: ListValueSectionController<SectionControllerConfi
       return node
     }
   }
-  
+
   override func didSelectItem(at index: Int) {
     delegate?.sectionControllerDidTap(self)
   }
