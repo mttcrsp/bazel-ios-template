@@ -1,5 +1,5 @@
 proj:
-	bazel run //app:xcodeproj
+	bazel run //app:xproj
 
 pods:
 	bazel run @rules_pods//:update_pods -- --src_root $(PWD)
