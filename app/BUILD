@@ -9,7 +9,7 @@ swift_library(
   tags = ["manual"],
   visibility = ["//visibility:public"],
   deps = [
-    "@swiftpkg_swift_composable_architecture//:Sources_ComposableArchitecture",
+    "@swiftpkg_swift_composable_architecture//:ComposableArchitecture",
     "//Vendor/IGListSwiftKit:IGListSwiftKit",
     "//Vendor/IGListKit:IGListKit",
     "//Vendor/Texture:Texture",
