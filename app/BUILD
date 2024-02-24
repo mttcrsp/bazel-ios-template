@@ -4,7 +4,7 @@ load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
 
 swift_library(
     name = "app_lib",
-    srcs = ["App.swift"],
+    srcs = glob(["Sources/*.swift"]),
     tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = [

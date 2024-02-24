@@ -1,3 +1,4 @@
+// swiftlint:disable file_types_order
 import AsyncDisplayKit
 import Combine
 import ComposableArchitecture
@@ -62,6 +63,7 @@ class ViewController: ASDKViewController<ASCollectionNode> {
       .store(in: &cancellables)
   }
 
+  @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
@@ -133,3 +135,4 @@ extension SectionController: ASSectionController {
     ASIGListSectionControllerMethods.cellForItem(at: index, sectionController: self)
   }
 }
+// swiftlint:enable file_types_order
