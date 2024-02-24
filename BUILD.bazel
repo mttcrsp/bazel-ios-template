@@ -1,5 +1,5 @@
-load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 load("@cgrindel_bazel_starlib//bzltidy:defs.bzl", "tidy")
+load("@gazelle//:def.bzl", "gazelle_binary")
 load("@rules_swift_package_manager//swiftpkg:defs.bzl", "swift_update_packages")
 
 tidy(

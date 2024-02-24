@@ -8,4 +8,5 @@ http_archive(
     urls = ["https://github.com/pinterest/PodToBUILD/releases/download/6.3.2-370b622/PodToBUILD.zip"],
 )
 
+# @unused Used by Pods.WORKSPACE
 load("@rules_pods//BazelExtensions:workspace.bzl", "new_pod_repository")

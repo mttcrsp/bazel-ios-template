@@ -1,7 +1,6 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
-load("@rules_cc//cc:defs.bzl", "objc_library")
 
 swift_library(
     name = "app_lib",
