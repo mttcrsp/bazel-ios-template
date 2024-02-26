@@ -1,9 +1,6 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
-load("@rules_swift_tidy//swiftformat:defs.bzl", "swiftformat_pkg")
 load("@rules_xcodeproj//xcodeproj:defs.bzl", "xcodeproj")
-
-swiftformat_pkg(name = "swiftformat")
 
 swift_library(
     name = "app_lib",
@@ -34,7 +31,6 @@ ios_application(
 
 xcodeproj(
     name = "proj",
-    pre_build = "$SRCROOT/pre-build.sh",
     project_name = "App",
     tags = ["manual"],
     top_level_targets = [":app"],
